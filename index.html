@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CoopConnect — Project Progress Tracker</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div class="eyebrow">FITM · COOPCONNECT · PROJECT PROGRESS</div>
+      <h1>CoopConnect — แผนพัฒนาโครงงาน 10 สัปดาห์</h1>
+      <p>ติดตามความคืบหน้าการพัฒนาโครงงานพิเศษตามขอบเขตทั้งหมด 68 ข้อ</p>
+    </header>
+
+    <section class="summary" aria-label="ภาพรวมความคืบหน้า">
+      <div class="stat"><small>ขอบเขตทั้งหมด</small><strong id="totalCount">68</strong><span class="sub">ข้อ</span></div>
+      <div class="stat"><small>ยังไม่เริ่ม</small><strong id="notStartedCount">68</strong><span class="sub">ข้อ</span></div>
+      <div class="stat"><small>กำลังดำเนินการ</small><strong id="inProgressCount">0</strong><span class="sub">ข้อ</span></div>
+      <div class="stat"><small>เสร็จแล้ว</small><strong id="completedCount">0</strong><span class="sub">ข้อ</span></div>
+      <div class="stat"><small>ความคืบหน้ารวม</small><strong id="totalProgress">0%</strong><span class="sub">คำนวณจากงานที่เสร็จแล้ว</span></div>
+    </section>
+
+    <div class="layout">
+      <aside class="panel sidebar">
+        <strong>เลือกสัปดาห์</strong>
+        <p class="intro">เลือกสัปดาห์เพื่อดูรายการงานและความคืบหน้าที่บันทึกไว้</p>
+        <nav class="weeks" id="weeks" aria-label="เลือกสัปดาห์"></nav>
+        <div class="button-stack">
+          <button class="btn" id="export">ส่งออกความคืบหน้า JSON</button>
+          <button class="btn" id="import">นำเข้าความคืบหน้า JSON</button>
+          <input type="file" id="importFile" accept=".json,application/json" hidden>
+          <button class="btn danger" id="reset">รีเซ็ตความคืบหน้าทั้งหมด</button>
+        </div>
+        <p class="intro">สถานะและโน้ตบันทึกใน LocalStorage ของเบราว์เซอร์นี้เท่านั้น</p>
+      </aside>
+
+      <section class="panel">
+        <div class="headline">
+          <div><h2 id="weekTitle"></h2><p class="intro" id="weekDesc"></p></div>
+          <span class="chip progress-chip" id="weekSummary"></span>
+        </div>
+        <div class="week-plan">
+          <p><strong>เป้าหมาย:</strong> <span id="weekGoal"></span></p>
+          <p><strong>งานที่ทำร่วมกัน:</strong> <span id="weekTogether"></span></p>
+          <p><strong>ผลส่งมอบ:</strong> <span id="weekDeliverable"></span></p>
+        </div>
+        <div class="bar" aria-label="ความคืบหน้าสัปดาห์"><span id="weekBar" style="width:0%"></span></div>
+        <div class="toolbar">
+          <input id="search" type="search" placeholder="ค้นหารหัสงาน / เลขข้อ / หัวข้อ / รายละเอียด…" aria-label="ค้นหางาน">
+          <select id="statusFilter" aria-label="กรองตามสถานะ">
+            <option value="all">ทุกสถานะ</option>
+            <option value="not_started">ยังไม่เริ่ม</option>
+            <option value="in_progress">กำลังดำเนินการ</option>
+            <option value="completed">เสร็จแล้ว</option>
+          </select>
+          <select id="roleFilter" aria-label="กรองตามบทบาท"><option value="all">ทุกบทบาท</option></select>
+          <button id="expand" class="btn primary">ขยายรายละเอียดทั้งหมด</button>
+        </div>
+        <div id="tasks"></div>
+      </section>
+    </div>
+    <footer class="footer">ข้อมูลขอบเขตจากโครงงานพิเศษ CoopConnect ข้อ 2.3 แบ่งเป็นแผนพัฒนา 10 สัปดาห์ สถานะความคืบหน้าเป็นข้อมูลที่ผู้ใช้บันทึกเอง</footer>
+  </main>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
