@@ -128,7 +128,7 @@ async function save(work,success){
  if(busy)return;
  try{ensure();busy=true;permissions();await work();await load();tell(success||'บันทึกสำเร็จ');}
  catch(e){tell('ไม่สำเร็จ: '+e.message,true);}
- finally{busy=false;permissions();}
+ finally{busy=false;render();}
 }
 function projectForm(edit){
  if(!canEdit())return;
