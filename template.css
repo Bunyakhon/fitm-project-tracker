@@ -33,3 +33,22 @@
 .current-status{margin-top:12px}
 .empty{border:1px dashed #d2ddef;border-radius:12px;background:#fafcff}
 @media(max-width:650px){.project-toolbar{padding:16px}.project-toolbar-main{align-items:stretch}.project-toolbar-main>*{width:100%}.actions>*{flex:1}.task-top{flex-direction:column}.modal{padding:18px}.sidebar-heading{flex-direction:column}}
+
+/* Unified project view and evidence */
+.summary{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:700px){.summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.task-evidence{margin-top:14px;padding:12px 0;border-top:1px solid #e8edf5}
+.task-evidence h4{margin:0 0 8px;font-size:17px}
+.evidence-note{font-size:15px;color:#53647d;line-height:1.6}
+.evidence-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin:12px 0}
+.evidence-item{border:1px solid #dde5f1;border-radius:10px;padding:9px;background:#f8faff;min-width:0}
+.evidence-item img{display:block;width:100%;height:110px;object-fit:cover;border-radius:6px;cursor:zoom-in}
+.evidence-item p{overflow-wrap:anywhere;font-size:14px;margin:6px 0}
+.evidence-item a{color:#245bc1;display:inline-block;margin:3px 0;font-size:14px}
+.upload-field{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:15px}
+.upload-field input[type=file]{font-size:15px;max-width:100%;width:auto}
+.evidence-dialog{width:min(95vw,900px);max-height:90vh}
+.evidence-dialog img{max-width:100%;max-height:75vh;display:block;margin:auto}
+.task-details-list{font-size:17px;line-height:1.8;padding-left:24px}
+.task-details-list li{margin:4px 0}
+@media(max-width:650px){.evidence-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
