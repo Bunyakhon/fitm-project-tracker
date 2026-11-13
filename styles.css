@@ -9,3 +9,14 @@
 @media(max-width:1080px){.summary{grid-template-columns:repeat(3,1fr)}.toolbar{grid-template-columns:1fr 1fr}.toolbar input{grid-column:1/-1}}
 @media(max-width:860px){.layout{grid-template-columns:1fr}.sidebar{position:static}.weeks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.summary{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:560px){.shell{padding:12px}.hero{padding:23px}.hero h1{font-size:32px}.summary{grid-template-columns:repeat(2,minmax(0,1fr))}.stat{padding:13px;min-height:92px}.stat strong{font-size:24px}.weeks{grid-template-columns:repeat(2,minmax(0,1fr))}.week{padding:10px}.week strong{font-size:16px}.panel{padding:16px}.toolbar{grid-template-columns:1fr}.toolbar input{grid-column:auto}.task-top{flex-direction:column}.status-control{align-items:flex-start}.headline h2{font-size:22px}.footer{font-size:16px}}
+
+[hidden]{display:none!important}
+.cloud-panel{background:#fff;border:1px solid var(--border);border-radius:15px;padding:20px;margin:18px 0;font-size:16px}
+.cloud-header{display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap;margin-bottom:12px}
+#cloudStatus{color:#2556b1}#cloudStatus[data-error="true"],#authMessage[data-error="true"]{color:#ad2445}
+.cloud-form{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;padding:10px 0}
+.cloud-form label{display:flex;flex-direction:column;gap:5px}
+.cloud-form input{border:1px solid #d4deed;border-radius:9px;padding:11px;font-size:16px;min-width:180px}
+.cloud-panel .btn{margin:6px 5px 6px 0}
+.btn:disabled,.task select:disabled,.task textarea:disabled{opacity:.6;cursor:not-allowed}
+@media(max-width:560px){.cloud-form,.cloud-form label,.cloud-form input{width:100%;min-width:0}}
