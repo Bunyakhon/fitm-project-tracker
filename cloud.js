@@ -1,7 +1,7 @@
 /* CoopConnect cloud adapter: publishable key only; RLS secures writes. */
 (function () {
 'use strict';
-const PROJECT_URL = 'https://epqbivhfjdnnmcwivogah.supabase.co';
+const PROJECT_URL = 'https://epqbivhfjdnmcwivogah.supabase.co';
 const PUBLISHABLE_KEY = 'sb_publishable_zoBBu3ha4ICyFIK6znarhA_xQpuxmeU';
 const allowed = new Set(DATA.tasks.map(task => task.id));
 const client = window.supabase?.createClient(PROJECT_URL, PUBLISHABLE_KEY, {
