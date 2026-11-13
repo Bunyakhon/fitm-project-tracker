@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>FITM — สร้าง Project Tracker ของคุณ</title>
+  <title>FITM — Project Tracker · CoopConnect</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="template.css">
 </head>
@@ -11,9 +11,9 @@
 <main class="shell">
   <header class="hero">
     <div class="eyebrow">FITM · PROJECT TRACKER · YOUR TEMPLATE</div>
-    <h1>สร้าง Project Tracker ของคุณ</h1>
-    <p>ใช้ Template สีน้ำเงิน–ขาวแบบ CoopConnect เพิ่มสัปดาห์และข้อกำหนดใหม่ได้เอง โดยไม่กระทบขอบเขตเดิม 68 ข้อ</p>
-    <a class="hero-back" href="./index.html">← กลับไป CoopConnect Tracker เดิม</a>
+    <h1>FITM Project Tracker — โครงการและแผนรายสัปดาห์</h1>
+    <p>เลือก CoopConnect 68 ข้อเดิม หรือสร้างโครงการใหม่ กำหนดจำนวนสัปดาห์และรายการงาน พร้อมหลักฐานภาพใน Supabase</p>
+    <a class="hero-back" href="./legacy.html">ดูหน้า Tracker แบบเดิม (สำรอง)</a>
   </header>
 
   <section class="cloud-panel" aria-label="การเชื่อมต่อและสิทธิ์การใช้งาน">
@@ -25,12 +25,21 @@
       <label>อีเมล<input id="loginEmail" type="email" autocomplete="email" required></label>
       <label>รหัสผ่าน<input id="loginPassword" type="password" autocomplete="current-password" required></label>
       <button class="btn primary" type="submit">เข้าสู่ระบบ</button>
-      <a href="./index.html" class="inline-link">ลืมรหัสผ่าน / ตั้งรหัสผ่าน</a>
+      <button type="button" id="resetPassword" class="btn">ขอลิงก์ตั้งรหัสผ่าน</button>
     </form>
     <div id="signedIn" hidden>
       <span id="whoami"></span> <span id="editorRole"></span>
       <button id="logout" type="button" class="btn">ออกจากระบบ</button>
     </div>
+
+    <form id="passwordForm" class="cloud-form" hidden>
+      <label>ตั้งรหัสผ่านใหม่ (8 ตัวอักษรขึ้นไป)
+        <input id="newPassword" type="password" minlength="8" autocomplete="new-password" required></label>
+      <label>ยืนยันรหัสผ่านใหม่
+        <input id="confirmPassword" type="password" minlength="8" autocomplete="new-password" required></label>
+      <button type="submit" class="btn primary">บันทึกรหัสผ่าน</button>
+    </form>
+    <button type="button" id="togglePassword" class="btn" hidden>ตั้ง/เปลี่ยนรหัสผ่าน</button>
     <p id="feedback" class="feedback" role="status" aria-live="polite"></p>
   </section>
 
@@ -45,7 +54,11 @@
     <form id="projectForm" class="editor-form" hidden>
       <h3 id="projectFormTitle">สร้างโปรเจกต์ใหม่</h3>
       <label>ชื่อโปรเจกต์ <input id="projectName" maxlength="120" required placeholder="เช่น FITM Internship Project"></label>
+      <label>จำนวนสัปดาห์ที่ต้องการ
+        <input id="projectWeeks" type="number" min="1" max="104" value="10" required>
+      </label>
       <label>คำอธิบาย <textarea id="projectDescription" maxlength="2000" placeholder="อธิบายเป้าหมายของโปรเจกต์"></textarea></label>
+      <p class="intro">เมื่อกดสร้าง ระบบจะเตรียมสัปดาห์ว่างตามจำนวนที่เลือกให้ทันที จากนั้นกรอกรายละเอียดแต่ละสัปดาห์และข้อกำหนดได้เอง</p>
       <div class="actions"><button class="btn primary" type="submit" id="saveProject">บันทึกโปรเจกต์</button><button class="btn" id="cancelProject" type="button">ยกเลิก</button></div>
     </form>
     <p class="intro" id="projectSummary">เริ่มต้นโดยเลือกหรือสร้างโปรเจกต์ใหม่</p>
@@ -57,6 +70,7 @@
     <div class="stat"><small>ยังไม่เริ่ม</small><strong id="notStarted">0</strong><span class="sub">ข้อ</span></div>
     <div class="stat"><small>กำลังดำเนินการ</small><strong id="inProgress">0</strong><span class="sub">ข้อ</span></div>
     <div class="stat"><small>เสร็จแล้ว</small><strong id="completed">0</strong><span class="sub">ข้อ</span></div>
+    <div class="stat"><small>ความคืบหน้ารวม</small><strong id="overallProgress">0%</strong><span class="sub">เทียบจากข้อที่เสร็จแล้ว</span></div>
   </section>
 
   <div class="layout">
@@ -64,7 +78,7 @@
       <div class="sidebar-heading"><strong>สัปดาห์ของโปรเจกต์</strong><button class="btn primary" id="addWeek" type="button" disabled>+ เพิ่มสัปดาห์</button></div>
       <p class="intro">เพิ่มชื่อสัปดาห์ เป้าหมาย งานที่ทำร่วมกัน และผลส่งมอบในรูปแบบเดียวกับ Tracker เดิม</p>
       <nav id="weeks" class="weeks" aria-label="รายการสัปดาห์"></nav>
-      <button id="addTenWeeks" class="btn" type="button" disabled>+ สร้าง 10 สัปดาห์ว่าง</button>
+      <button id="addTenWeeks" class="btn" type="button" disabled>เติมสัปดาห์ว่างตามจำนวนที่กำหนด</button>
     </aside>
 
     <section class="panel">
@@ -120,11 +134,12 @@
       <label>หัวข้อเต็ม <input name="title" maxlength="250" required></label>
       <label>บทบาท <input name="role" maxlength="150" placeholder="เช่น นักศึกษาสหกิจศึกษา"></label>
       <label>รายละเอียดขอบเขตแบบเต็ม <textarea name="description" maxlength="15000" rows="6"></textarea></label>
+      <label>รายการย่อยในข้อกำหนด (หนึ่งรายการต่อบรรทัด) <textarea name="details" rows="4" placeholder="เช่น ชื่อ-นามสกุล&#10;อีเมล&#10;เบอร์โทรศัพท์"></textarea></label>
       <label>สถานะเริ่มต้น <select name="status"><option value="not_started">ยังไม่เริ่ม</option><option value="in_progress">กำลังดำเนินการ</option><option value="completed">เสร็จแล้ว</option></select></label>
       <div class="actions"><button class="btn primary" type="submit">บันทึกข้อ / งาน</button><button class="btn" type="button" data-close="taskDialog">ยกเลิก</button></div>
     </form>
   </dialog>
-  <footer class="footer">FITM Project Tracker Template · โปรเจกต์ใหม่นับงานแยกจากขอบเขต CoopConnect 68 ข้อ และซิงก์ผ่าน Supabase</footer>
+  <footer class="footer">FITM Project Tracker · CoopConnect 68 ข้อจากขอบเขตต้นฉบับ + โปรเจกต์ใหม่ที่สร้างเอง · ข้อมูลจาก Supabase</footer>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="template.js"></script>
