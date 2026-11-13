@@ -3,97 +3,145 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CoopConnect — Project Progress Tracker</title>
+  <title>FITM — Project Tracker · CoopConnect</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="template.css">
 </head>
 <body>
-  <main class="shell">
-    <header class="hero">
-      <div class="eyebrow">FITM · COOPCONNECT · PROJECT PROGRESS</div>
-      <h1>CoopConnect — แผนพัฒนาโครงงาน 10 สัปดาห์</h1>
-      <p>ติดตามความคืบหน้าการพัฒนาโครงงานพิเศษตามขอบเขตทั้งหมด 68 ข้อ</p>
-      <p><a href="./template.html" style="color:#e0ecff;text-decoration:underline;text-underline-offset:5px;font-weight:700">+ สร้าง Tracker ใหม่จาก Template ของเรา (เพิ่มสัปดาห์และข้อได้เอง)</a></p>
-    </header>
+<main class="shell">
+  <header class="hero">
+    <div class="eyebrow">FITM · PROJECT TRACKER · YOUR TEMPLATE</div>
+    <h1>FITM Project Tracker — โครงการและแผนรายสัปดาห์</h1>
+    <p>เลือก CoopConnect 68 ข้อเดิม หรือสร้างโครงการใหม่ กำหนดจำนวนสัปดาห์และรายการงาน พร้อมหลักฐานภาพใน Supabase</p>
+    <a class="hero-back" href="./legacy.html">ดูหน้า Tracker แบบเดิม (สำรอง)</a>
+  </header>
 
-    <section class="cloud-panel" aria-label="ข้อมูลกลาง Supabase">
-      <div class="cloud-header">
-        <strong id="cloudStatus" role="status" aria-live="polite">กำลังเชื่อมต่อฐานข้อมูลกลาง…</strong>
-        <span>ข้อมูลความคืบหน้าเป็นสาธารณะ ผู้ได้รับสิทธิ์เท่านั้นที่แก้ไขได้</span>
-      </div>
-      <div id="authSignedOut">
-        <form id="authSignInForm" class="cloud-form">
-          <label>อีเมล<input id="authEmail" type="email" autocomplete="email" required></label>
-          <label>รหัสผ่าน<input id="authPasswordInput" type="password" autocomplete="current-password" required></label>
-          <button id="authSignInButton" type="submit" class="btn primary">เข้าสู่ระบบเพื่อแก้ไข</button>
-          <button id="authResetLink" type="button" class="btn">ขอลิงก์ตั้งรหัสผ่าน</button>
-        </form>
-      </div>
-      <div id="authSignedIn" hidden>
-        <span id="authUserLabel"></span> · <span id="authRoleLabel"></span>
-        <button id="authShowPassword" type="button" class="btn">ตั้ง/เปลี่ยนรหัสผ่าน</button>
-        <button id="authSignOut" type="button" class="btn">ออกจากระบบ</button>
-      </div>
-      <div id="authPasswordForm" hidden>
-        <form id="authSavePasswordForm" class="cloud-form">
-          <label>รหัสผ่านใหม่<input id="authNewPassword" type="password" minlength="8" autocomplete="new-password" required></label>
-          <label>ยืนยันรหัสผ่าน<input id="authConfirmPassword" type="password" minlength="8" autocomplete="new-password" required></label>
-          <button type="submit" class="btn primary">บันทึกรหัสผ่าน</button>
-        </form>
-      </div>
-      <p id="authMessage" aria-live="polite" role="status"></p>
-    </section>
-    <section class="summary" aria-label="ภาพรวมความคืบหน้า">
-      <div class="stat"><small>ขอบเขตทั้งหมด</small><strong id="totalCount">68</strong><span class="sub">ข้อ</span></div>
-      <div class="stat"><small>ยังไม่เริ่ม</small><strong id="notStartedCount">68</strong><span class="sub">ข้อ</span></div>
-      <div class="stat"><small>กำลังดำเนินการ</small><strong id="inProgressCount">0</strong><span class="sub">ข้อ</span></div>
-      <div class="stat"><small>เสร็จแล้ว</small><strong id="completedCount">0</strong><span class="sub">ข้อ</span></div>
-      <div class="stat"><small>ความคืบหน้ารวม</small><strong id="totalProgress">0%</strong><span class="sub">คำนวณจากงานที่เสร็จแล้ว</span></div>
-    </section>
+  <section class="cloud-panel" aria-label="การเชื่อมต่อและสิทธิ์การใช้งาน">
+    <div class="cloud-header">
+      <strong id="connection" role="status" aria-live="polite">กำลังเชื่อมต่อ Supabase…</strong>
+      <span>ทุกคนดูได้ · ผู้ได้รับสิทธิ์ Editor เพิ่มและแก้ไขได้</span>
+    </div>
+    <form id="loginForm" class="cloud-form">
+      <label>อีเมล<input id="loginEmail" type="email" autocomplete="email" required></label>
+      <label>รหัสผ่าน<input id="loginPassword" type="password" autocomplete="current-password" required></label>
+      <button class="btn primary" type="submit">เข้าสู่ระบบ</button>
+      <button type="button" id="resetPassword" class="btn">ขอลิงก์ตั้งรหัสผ่าน</button>
+    </form>
+    <div id="signedIn" hidden>
+      <span id="whoami"></span> <span id="editorRole"></span>
+      <button id="logout" type="button" class="btn">ออกจากระบบ</button>
+    </div>
 
-    <div class="layout">
-      <aside class="panel sidebar">
-        <strong>เลือกสัปดาห์</strong>
-        <p class="intro">เลือกสัปดาห์เพื่อดูรายการงานและความคืบหน้าที่บันทึกไว้</p>
-        <nav class="weeks" id="weeks" aria-label="เลือกสัปดาห์"></nav>
-        <div class="button-stack">
-          <button class="btn" id="export">ส่งออกความคืบหน้า JSON</button>
-          <button class="btn" id="import">นำเข้าความคืบหน้า JSON</button>
-          <input type="file" id="importFile" accept=".json,application/json" hidden>
-          <button class="btn danger" id="reset">รีเซ็ตความคืบหน้าทั้งหมด</button>
-        </div>
-        <p class="intro">สถานะและโน้ตอ่านจาก Supabase กลาง · ต้องล็อกอินและได้รับสิทธิ์เพื่อแก้ไข</p>
-      </aside>
+    <form id="passwordForm" class="cloud-form" hidden>
+      <label>ตั้งรหัสผ่านใหม่ (8 ตัวอักษรขึ้นไป)
+        <input id="newPassword" type="password" minlength="8" autocomplete="new-password" required></label>
+      <label>ยืนยันรหัสผ่านใหม่
+        <input id="confirmPassword" type="password" minlength="8" autocomplete="new-password" required></label>
+      <button type="submit" class="btn primary">บันทึกรหัสผ่าน</button>
+    </form>
+    <button type="button" id="togglePassword" class="btn" hidden>ตั้ง/เปลี่ยนรหัสผ่าน</button>
+    <p id="feedback" class="feedback" role="status" aria-live="polite"></p>
+  </section>
 
-      <section class="panel">
+  <section class="panel project-toolbar" aria-label="โปรเจกต์">
+    <div class="project-toolbar-main">
+      <label>เลือกโปรเจกต์
+        <select id="projectSelect" aria-label="เลือกโปรเจกต์"></select>
+      </label>
+      <button id="toggleProject" type="button" class="btn primary" disabled>+ สร้างโปรเจกต์ใหม่</button>
+      <button id="renameProject" type="button" class="btn" disabled>แก้ไขชื่อโปรเจกต์</button>
+    </div>
+    <form id="projectForm" class="editor-form" hidden>
+      <h3 id="projectFormTitle">สร้างโปรเจกต์ใหม่</h3>
+      <label>ชื่อโปรเจกต์ <input id="projectName" maxlength="120" required placeholder="เช่น FITM Internship Project"></label>
+      <label>จำนวนสัปดาห์ที่ต้องการ
+        <input id="projectWeeks" type="number" min="1" max="104" value="10" required>
+      </label>
+      <label>คำอธิบาย <textarea id="projectDescription" maxlength="2000" placeholder="อธิบายเป้าหมายของโปรเจกต์"></textarea></label>
+      <p class="intro">เมื่อกดสร้าง ระบบจะเตรียมสัปดาห์ว่างตามจำนวนที่เลือกให้ทันที จากนั้นกรอกรายละเอียดแต่ละสัปดาห์และข้อกำหนดได้เอง</p>
+      <div class="actions"><button class="btn primary" type="submit" id="saveProject">บันทึกโปรเจกต์</button><button class="btn" id="cancelProject" type="button">ยกเลิก</button></div>
+    </form>
+    <p class="intro" id="projectSummary">เริ่มต้นโดยเลือกหรือสร้างโปรเจกต์ใหม่</p>
+  </section>
+
+  <section class="summary" aria-label="ความคืบหน้าของโปรเจกต์">
+    <div class="stat"><small>สัปดาห์ทั้งหมด</small><strong id="weekCount">0</strong><span class="sub">สัปดาห์</span></div>
+    <div class="stat"><small>งานทั้งหมด</small><strong id="totalCount">0</strong><span class="sub">ข้อ</span></div>
+    <div class="stat"><small>ยังไม่เริ่ม</small><strong id="notStarted">0</strong><span class="sub">ข้อ</span></div>
+    <div class="stat"><small>กำลังดำเนินการ</small><strong id="inProgress">0</strong><span class="sub">ข้อ</span></div>
+    <div class="stat"><small>เสร็จแล้ว</small><strong id="completed">0</strong><span class="sub">ข้อ</span></div>
+    <div class="stat"><small>ความคืบหน้ารวม</small><strong id="overallProgress">0%</strong><span class="sub">เทียบจากข้อที่เสร็จแล้ว</span></div>
+  </section>
+
+  <div class="layout">
+    <aside class="panel sidebar">
+      <div class="sidebar-heading"><strong>สัปดาห์ของโปรเจกต์</strong><button class="btn primary" id="addWeek" type="button" disabled>+ เพิ่มสัปดาห์</button></div>
+      <p class="intro">เพิ่มชื่อสัปดาห์ เป้าหมาย งานที่ทำร่วมกัน และผลส่งมอบในรูปแบบเดียวกับ Tracker เดิม</p>
+      <nav id="weeks" class="weeks" aria-label="รายการสัปดาห์"></nav>
+      <button id="addTenWeeks" class="btn" type="button" disabled>เติมสัปดาห์ว่างตามจำนวนที่กำหนด</button>
+    </aside>
+
+    <section class="panel">
+      <div id="emptyProject" class="empty">โปรดเลือกหรือสร้างโปรเจกต์ใหม่</div>
+      <div id="weekArea" hidden>
         <div class="headline">
-          <div><h2 id="weekTitle"></h2><p class="intro" id="weekDesc"></p></div>
-          <span class="chip progress-chip" id="weekSummary"></span>
+          <div><h2 id="weekTitle"></h2><p class="intro" id="weekSummary"></p></div>
+          <span class="chip progress-chip" id="weekProgress">0%</span>
         </div>
         <div class="week-plan">
           <p><strong>เป้าหมาย:</strong> <span id="weekGoal"></span></p>
           <p><strong>งานที่ทำร่วมกัน:</strong> <span id="weekTogether"></span></p>
           <p><strong>ผลส่งมอบ:</strong> <span id="weekDeliverable"></span></p>
         </div>
-        <div class="bar" aria-label="ความคืบหน้าสัปดาห์"><span id="weekBar" style="width:0%"></span></div>
+        <div class="bar"><span id="weekBar" style="width:0%"></span></div>
+        <div class="actions inline-editor">
+          <button type="button" class="btn" id="editWeek" disabled>แก้ไขสัปดาห์</button>
+          <button type="button" class="btn danger" id="deleteWeek" disabled>ลบสัปดาห์</button>
+          <button type="button" class="btn primary" id="addTask" disabled>+ เพิ่มข้อ / งาน</button>
+        </div>
         <div class="toolbar">
-          <input id="search" type="search" placeholder="ค้นหารหัสงาน / เลขข้อ / หัวข้อ / รายละเอียด…" aria-label="ค้นหางาน">
-          <select id="statusFilter" aria-label="กรองตามสถานะ">
+          <input id="search" type="search" aria-label="ค้นหางาน" placeholder="ค้นหาเลขข้อ / หัวข้อ / รายละเอียด...">
+          <select id="statusFilter" aria-label="กรองสถานะ">
             <option value="all">ทุกสถานะ</option>
             <option value="not_started">ยังไม่เริ่ม</option>
             <option value="in_progress">กำลังดำเนินการ</option>
             <option value="completed">เสร็จแล้ว</option>
           </select>
-          <select id="roleFilter" aria-label="กรองตามบทบาท"><option value="all">ทุกบทบาท</option></select>
-          <button id="expand" class="btn primary">ขยายรายละเอียดทั้งหมด</button>
+          <select id="roleFilter" aria-label="กรองบทบาท"><option value="all">ทุกบทบาท</option></select>
+          <button type="button" id="expand" class="btn primary">ขยายรายละเอียดทั้งหมด</button>
         </div>
         <div id="tasks"></div>
-      </section>
-    </div>
-    <footer class="footer">ข้อมูลขอบเขตจากโครงงานพิเศษ CoopConnect ข้อ 2.3 แบ่งเป็นแผนพัฒนา 10 สัปดาห์ สถานะความคืบหน้าเป็นข้อมูลที่ผู้ใช้บันทึกเอง</footer>
-  </main>
-  <script src="data.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="cloud.js"></script>
-  <script src="app.js"></script>
+      </div>
+    </section>
+  </div>
+
+  <dialog id="weekDialog" class="modal">
+    <form id="weekForm">
+      <h2 id="weekDialogTitle">เพิ่มสัปดาห์</h2>
+      <label>ชื่อสัปดาห์ <input name="title" maxlength="160" required placeholder="ระบบบัญชีผู้ใช้และข้อมูลพื้นฐาน"></label>
+      <label>เป้าหมาย <textarea name="goal" maxlength="3000"></textarea></label>
+      <label>งานที่ทำร่วมกัน <textarea name="together" maxlength="3000"></textarea></label>
+      <label>ผลส่งมอบ <textarea name="deliverable" maxlength="3000"></textarea></label>
+      <div class="actions"><button type="submit" class="btn primary">บันทึกสัปดาห์</button><button type="button" class="btn" data-close="weekDialog">ยกเลิก</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="taskDialog" class="modal">
+    <form id="taskForm">
+      <h2 id="taskDialogTitle">เพิ่มข้อ / งาน</h2>
+      <label>สัปดาห์ <select name="week_id" required></select></label>
+      <label>เลขข้ออ้างอิง (กรอกเองได้) <input name="reference" maxlength="100" placeholder="เช่น 2.3.1.1 ข้อที่ 1"></label>
+      <label>หัวข้อเต็ม <input name="title" maxlength="250" required></label>
+      <label>บทบาท <input name="role" maxlength="150" placeholder="เช่น นักศึกษาสหกิจศึกษา"></label>
+      <label>รายละเอียดขอบเขตแบบเต็ม <textarea name="description" maxlength="15000" rows="6"></textarea></label>
+      <label>รายการย่อยในข้อกำหนด (หนึ่งรายการต่อบรรทัด) <textarea name="details" rows="4" placeholder="เช่น ชื่อ-นามสกุล&#10;อีเมล&#10;เบอร์โทรศัพท์"></textarea></label>
+      <label>สถานะเริ่มต้น <select name="status"><option value="not_started">ยังไม่เริ่ม</option><option value="in_progress">กำลังดำเนินการ</option><option value="completed">เสร็จแล้ว</option></select></label>
+      <div class="actions"><button class="btn primary" type="submit">บันทึกข้อ / งาน</button><button class="btn" type="button" data-close="taskDialog">ยกเลิก</button></div>
+    </form>
+  </dialog>
+  <footer class="footer">FITM Project Tracker · CoopConnect 68 ข้อจากขอบเขตต้นฉบับ + โปรเจกต์ใหม่ที่สร้างเอง · ข้อมูลจาก Supabase</footer>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="template.js"></script>
 </body>
 </html>
