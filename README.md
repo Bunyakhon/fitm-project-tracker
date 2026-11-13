@@ -48,3 +48,31 @@ Export และ Import ใช้ไฟล์ JSON รูปแบบเดี�
 - ให้สิทธิ์ผู้แก้ไขหลังสร้างบัญชีใน Authentication → Users โดยใช้ SQL Editor:
   `insert into public.tracker_editors(user_id) values ('YOUR-REAL-USER-UUID') on conflict(user_id) do nothing;`
 - ก่อน Merge PR ต้องทดสอบกับ Supabase จริงและบัญชีผู้แก้ไข/ผู้ชมสองเบราว์เซอร์ ตรวจ Console, Network และ GitHub Pages ด้วย
+
+
+## สร้าง Tracker ใหม่ด้วย Template หน้าตาเดิม
+
+เปิดหน้า [Tracker Template](./template.html) เพื่อสร้างโปรเจกต์ใหม่ โดยไม่เปลี่ยน CoopConnect 68 ข้อเดิม
+
+หน้า Template ใช้ธีมเดียวกับเว็บเดิม แต่โปรเจกต์ใหม่เริ่มจาก **0 สัปดาห์ / 0 ข้อ** ผู้มีสิทธิ์ Editor สามารถ:
+
+- สร้างโปรเจกต์ใหม่, เปลี่ยนชื่อ/คำอธิบาย และเลือกสลับโปรเจกต์
+- เพิ่ม/แก้ไข/ลบสัปดาห์ พร้อมเป้าหมาย งานที่ทำร่วมกัน และผลส่งมอบ
+- สร้าง 10 สัปดาห์ว่างพร้อมกัน หรือเพิ่มเองทีละสัปดาห์
+- เพิ่ม/แก้ไข/ย้ายสัปดาห์/ลบข้อ โดยมีเลขอ้างอิง ชื่อเต็ม บทบาท และรายละเอียดเต็ม
+- เปลี่ยนสถานะ เพิ่มโน้ต ค้นหา กรองงาน และดูแถบความคืบหน้ารายสัปดาห์
+- บันทึกทุกการเปลี่ยนแปลงลง Supabase เพื่อใช้ร่วมกัน
+
+### ตั้งค่า Supabase ก่อนใช้งาน
+
+1. เข้า Supabase Project ที่ใช้กับเว็บไซต์ → SQL Editor → New Query
+2. เปิดไฟล์ [supabase/CREATE_CUSTOM_TRACKER.sql](supabase/CREATE_CUSTOM_TRACKER.sql) แล้วนำ SQL ทั้งหมดไปรันใน SQL Editor
+3. ตรวจว่ามีตาราง tracker_custom_projects, tracker_custom_weeks และ tracker_custom_tasks
+4. ยืนยันบัญชีของคุณมี UID ใน tracker_editors ตามขั้นตอนเดิม
+5. เปิด template.html ผ่าน GitHub Pages แล้วล็อกอินด้วยบัญชี Editor
+
+**สิทธิ์และความเป็นส่วนตัว:** คนทั่วไปดูโปรเจกต์ ข้อ และโน้ตได้ ส่วนสมาชิก tracker_editors ทุกคนแก้ไขโปรเจกต์ Template ได้ทุกโปรเจกต์ ยังไม่มีสิทธิ์แยกตามโปรเจกต์ อย่าใส่ข้อมูลลับลงในโน้ต
+
+**เรื่อง Deploy:** ห้ามนำเข้า main ก่อนตรวจการตั้งค่า SQL / ทดสอบสิทธิ์ RLS และการทำงานจริง หน้า template.html จะแสดงข้อความแจ้งเมื่อยังไม่มีตาราง Supabase
+
+**ความปลอดภัย:** ใช้เฉพาะ Publishable Key ใน Frontend และตรวจการเขียนด้วย RLS; ห้ามใส่ Secret Key, Service Role Key หรือรหัสผ่านฐานข้อมูลใน Repository
