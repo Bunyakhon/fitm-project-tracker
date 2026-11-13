@@ -91,6 +91,7 @@ function evidenceMarkup(t){
 }
 function card(t){
  const attr=canEdit()?'':' disabled';
+ const preventDelete=Boolean(t.source_key)||!canEdit()?' disabled':'';
  const options=Object.entries(labels).map(([value,label])=>'<option value="'+value+'"'+(t.status===value?' selected':'')+'>'+label+'</option>').join('');
  const description=esc(t.description||'ยังไม่ได้ระบุรายละเอียด');
  const details=Array.isArray(t.details)?t.details:[];
@@ -105,14 +106,14 @@ function card(t){
  '<div class="task-note"><label>โน้ตความคืบหน้า</label><textarea data-note="'+esc(t.id)+'" maxlength="10000"'+attr+'>'+
  esc(t.note||'')+'</textarea><div class="actions"><button type="button" class="btn primary" data-save-note="'+esc(t.id)+'"'+attr+'>บันทึกโน้ต</button></div></div></details>'+
  '<div class="task-commands"><button type="button" class="btn" data-edit-task="'+esc(t.id)+'"'+attr+'>แก้ไขข้อ / ย้ายสัปดาห์</button>'+
- '<button type="button" class="btn danger" data-delete-task="'+esc(t.id)+'"'+attr+'>ลบข้อ</button></div>'+
+ '<button type="button" class="btn danger" data-delete-task="'+esc(t.id)+'"'+preventDelete+'>ลบข้อ</button></div>'+
  '<div class="current-status">สถานะปัจจุบัน: <b>'+esc(labels[t.status]||labels.not_started)+'</b></div></article>';
 }
 function renderTasks(){
  const term=$('search').value.trim().toLocaleLowerCase(),s=$('statusFilter').value,r=$('roleFilter').value;
  const list=perWeek(weekId),visible=list.filter(t=>
   (s==='all'||t.status===s)&&(r==='all'||t.role===r)&&
-  [t.reference,t.title,t.description,t.role].join(' ').toLocaleLowerCase().includes(term)
+  [t.reference,t.title,t.description,t.role,...(Array.isArray(t.details)?t.details:[])].join(' ').toLocaleLowerCase().includes(term)
  );
  $('tasks').innerHTML=visible.length?visible.map(card).join(''):'<div class="empty">'+
   (list.length?'ไม่พบข้อที่ตรงกับตัวกรอง':'ยังไม่มีข้อ / งาน · กด + เพิ่มข้อ / งาน')+'</div>';
@@ -202,7 +203,7 @@ async function uploadEvidence(input){
  }finally{busy=false;render();}
 }
 async function deleteEvidence(id){
- ensure();
+ if(!(ready&&user&&editor))throw Error('ไม่มีสิทธิ์ลบหลักฐาน');
  const row=evidence.find(x=>x.id===id);
  if(!row)throw Error('ไม่พบรูป');
  affected(await db.from(E).delete().eq('id',id).select('id'));
@@ -323,6 +324,7 @@ $('weekForm').addEventListener('submit',e=>{
 });
 $('deleteWeek').addEventListener('click',()=>{
  const w=currentWeek();if(!w||!canEdit())return;
+ if(perWeek(w.id).some(t=>t.source_key))return tell('ไม่อนุญาตให้ลบสัปดาห์จากขอบเขต CoopConnect เดิม',true);
  if(!confirm('ลบสัปดาห์ '+w.title+' พร้อมงาน '+perWeek(w.id).length+' ข้ออย่างถาวรหรือไม่?'))return;
  void save(async()=>{affected(await db.from(W).delete().eq('id',w.id).select('id'));weekId='';},'ลบสัปดาห์แล้ว');
 });
@@ -363,7 +365,7 @@ $('tasks').addEventListener('click',e=>{
  if(del){
   if(!canEdit())return;
   const t=tasks.find(x=>x.id===del.dataset.deleteTask);
-  if(!t||!confirm('ลบข้อ '+t.title+' พร้อมภาพหลักฐานอย่างถาวรหรือไม่?'))return;
+  if(!t||t.source_key||!confirm('ลบข้อ '+t.title+' พร้อมภาพหลักฐานอย่างถาวรหรือไม่?'))return;
   return void save(async()=>{affected(await db.from(T).delete().eq('id',t.id).select('id'));},'ลบข้อแล้ว');
  }
  const delEvidence=e.target.closest('[data-delete-evidence]');
