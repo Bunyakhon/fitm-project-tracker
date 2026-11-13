@@ -1,0 +1,35 @@
+/* Template inherits existing CoopConnect styles.css */
+.hero-back{display:inline-block;color:#dbeafe;margin-top:14px;text-underline-offset:4px;font-size:16px}
+.project-toolbar{margin:18px 0;padding:20px 24px}
+.project-toolbar-main,.actions{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
+.project-toolbar-main label{flex:1;min-width:220px}
+.project-toolbar label,.editor-form label,.modal label{display:flex;flex-direction:column;gap:7px;font-size:16px;font-weight:650}
+.project-toolbar select,.project-toolbar input,.project-toolbar textarea,.modal input,.modal select,.modal textarea,.task textarea{background:#fff;border:1px solid #d4deed;border-radius:9px;padding:11px 12px;font-size:17px;color:#14223d;width:100%;line-height:1.5}
+.editor-form{border-top:1px solid #e3e8f1;padding:16px 0;display:grid;gap:12px;margin-top:14px}
+.editor-form h3{margin:0;font-size:21px}
+.cloud-panel{margin:18px 0}.cloud-header{margin-bottom:10px}.cloud-header span{color:#53647d}
+#signedIn{display:flex;align-items:center;gap:14px;flex-wrap:wrap}#editorRole{color:#53647d}
+.feedback{font-size:16px;min-height:1em;line-height:1.5;color:#2355a6}.feedback.error{color:#b12d43}
+.cloud-form a.inline-link{font-size:16px;color:#245bc1;text-decoration:underline}
+.sidebar-heading{display:flex;justify-content:space-between;gap:10px;align-items:start;flex-wrap:wrap}
+.sidebar-heading .btn{font-size:15px;padding:9px 10px}
+.sidebar>.btn{width:100%;margin-top:13px}
+.actions{margin:15px 0;justify-content:flex-start}
+.inline-editor{margin:18px 0 8px}
+.modal{width:min(680px,calc(100vw - 24px));max-height:90dvh;overflow-y:auto;border:1px solid #d5dfef;border-radius:16px;padding:26px;background:#fff;color:#14223d;box-shadow:0 20px 80px #0d18334f}
+.modal::backdrop{background:#0d183399}
+.modal form{display:grid;gap:13px}.modal h2{font-size:25px;margin:0 0 7px}
+.modal textarea{resize:vertical;min-height:80px}
+.week-plan p span:empty::after{content:"ยังไม่ได้ระบุ";color:#8794a8}
+.task-commands{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.task-status select{min-width:170px}
+.task-note{margin-top:12px;border-top:1px solid #edf0f5;padding-top:12px}
+.task-note label{display:block;margin-bottom:7px;font-size:16px;font-weight:700}
+.task-note textarea{min-height:90px}
+.task-note .actions{margin:7px 0}
+.task-badge{display:inline-flex;font-size:16px;background:#edf3ff;color:#2556b1;padding:5px 9px;border-radius:7px;font-weight:700}
+.task-description{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7;font-size:17px}
+.task-description.preview{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.current-status{margin-top:12px}
+.empty{border:1px dashed #d2ddef;border-radius:12px;background:#fafcff}
+@media(max-width:650px){.project-toolbar{padding:16px}.project-toolbar-main{align-items:stretch}.project-toolbar-main>*{width:100%}.actions>*{flex:1}.task-top{flex-direction:column}.modal{padding:18px}.sidebar-heading{flex-direction:column}}
