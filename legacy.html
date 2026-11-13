@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CoopConnect — Tracker เดิม (สำรอง)</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div class="eyebrow">FITM · COOPCONNECT · PROJECT PROGRESS</div>
+      <h1>CoopConnect — แผนพัฒนาโครงงาน 10 สัปดาห์</h1>
+      <p>ติดตามความคืบหน้าการพัฒนาโครงงานพิเศษตามขอบเขตทั้งหมด 68 ข้อ</p>
+      <p><a href="./template.html" style="color:#e0ecff;text-decoration:underline;text-underline-offset:5px;font-weight:700">+ สร้าง Tracker ใหม่จาก Template ของเรา (เพิ่มสัปดาห์และข้อได้เอง)</a></p>
+    </header>
+
+    <p class="intro"><a href="./index.html">← กลับไป Tracker ใหม่ (Supabase)</a></p>
+    <section class="cloud-panel" aria-label="ข้อมูลกลาง Supabase">
+      <div class="cloud-header">
+        <strong id="cloudStatus" role="status" aria-live="polite">กำลังเชื่อมต่อฐานข้อมูลกลาง…</strong>
+        <span>ข้อมูลความคืบหน้าเป็นสาธารณะ ผู้ได้รับสิทธิ์เท่านั้นที่แก้ไขได้</span>
+      </div>
+      <div id="authSignedOut">
+        <form id="authSignInForm" class="cloud-form">
+          <label>อีเมล<input id="authEmail" type="email" autocomplete="email" required></label>
+          <label>รหัสผ่าน<input id="authPasswordInput" type="password" autocomplete="current-password" required></label>
+          <button id="authSignInButton" type="submit" class="btn primary">เข้าสู่ระบบเพื่อแก้ไข</button>
+          <button id="authResetLink" type="button" class="btn">ขอลิงก์ตั้งรหัสผ่าน</button>
+        </form>
+      </div>
+      <div id="authSignedIn" hidden>
+        <span id="authUserLabel"></span> · <span id="authRoleLabel"></span>
+        <button id="authShowPassword" type="button" class="btn">ตั้ง/เปลี่ยนรหัสผ่าน</button>
+        <button id="authSignOut" type="button" class="btn">ออกจากระบบ</button>
+      </div>
+      <div id="authPasswordForm" hidden>
+        <form id="authSavePasswordForm" class="cloud-form">
+          <label>รหัสผ่านใหม่<input id="authNewPassword" type="password" minlength="8" autocomplete="new-password" required></label>
+          <label>ยืนยันรหัสผ่าน<input id="authConfirmPassword" type="password" minlength="8" autocomplete="new-password" required></label>
+          <button type="submit" class="btn primary">บันทึกรหัสผ่าน</button>
+        </form>
+      </div>
+      <p id="authMessage" aria-live="polite" role="status"></p>
+    </section>
+    <section class="summary" aria-label="ภาพรวมความคืบหน้า">
+      <div class="stat"><small>ขอบเขตทั้งหมด</small><strong id="totalCount">68</strong><span class="sub">ข้อ</span></div>
+      <div class="stat"><small>ยังไม่เริ่ม</small><strong id="notStartedCount">68</strong><span class="sub">ข้อ</span></div>
+      <div class="stat"><small>กำลังดำเนินการ</small><strong id="inProgressCount">0</strong><span class="sub">ข้อ</span></div>
+      <div class="stat"><small>เสร็จแล้ว</small><strong id="completedCount">0</strong><span class="sub">ข้อ</span></div>
+      <div class="stat"><small>ความคืบหน้ารวม</small><strong id="totalProgress">0%</strong><span class="sub">คำนวณจากงานที่เสร็จแล้ว</span></div>
+    </section>
+
+    <div class="layout">
+      <aside class="panel sidebar">
+        <strong>เลือกสัปดาห์</strong>
+        <p class="intro">เลือกสัปดาห์เพื่อดูรายการงานและความคืบหน้าที่บันทึกไว้</p>
+        <nav class="weeks" id="weeks" aria-label="เลือกสัปดาห์"></nav>
+        <div class="button-stack">
+          <button class="btn" id="export">ส่งออกความคืบหน้า JSON</button>
+          <button class="btn" id="import">นำเข้าความคืบหน้า JSON</button>
+          <input type="file" id="importFile" accept=".json,application/json" hidden>
+          <button class="btn danger" id="reset">รีเซ็ตความคืบหน้าทั้งหมด</button>
+        </div>
+        <p class="intro">สถานะและโน้ตอ่านจาก Supabase กลาง · ต้องล็อกอินและได้รับสิทธิ์เพื่อแก้ไข</p>
+      </aside>
+
+      <section class="panel">
+        <div class="headline">
+          <div><h2 id="weekTitle"></h2><p class="intro" id="weekDesc"></p></div>
+          <span class="chip progress-chip" id="weekSummary"></span>
+        </div>
+        <div class="week-plan">
+          <p><strong>เป้าหมาย:</strong> <span id="weekGoal"></span></p>
+          <p><strong>งานที่ทำร่วมกัน:</strong> <span id="weekTogether"></span></p>
+          <p><strong>ผลส่งมอบ:</strong> <span id="weekDeliverable"></span></p>
+        </div>
+        <div class="bar" aria-label="ความคืบหน้าสัปดาห์"><span id="weekBar" style="width:0%"></span></div>
+        <div class="toolbar">
+          <input id="search" type="search" placeholder="ค้นหารหัสงาน / เลขข้อ / หัวข้อ / รายละเอียด…" aria-label="ค้นหางาน">
+          <select id="statusFilter" aria-label="กรองตามสถานะ">
+            <option value="all">ทุกสถานะ</option>
+            <option value="not_started">ยังไม่เริ่ม</option>
+            <option value="in_progress">กำลังดำเนินการ</option>
+            <option value="completed">เสร็จแล้ว</option>
+          </select>
+          <select id="roleFilter" aria-label="กรองตามบทบาท"><option value="all">ทุกบทบาท</option></select>
+          <button id="expand" class="btn primary">ขยายรายละเอียดทั้งหมด</button>
+        </div>
+        <div id="tasks"></div>
+      </section>
+    </div>
+    <footer class="footer">ข้อมูลขอบเขตจากโครงงานพิเศษ CoopConnect ข้อ 2.3 แบ่งเป็นแผนพัฒนา 10 สัปดาห์ สถานะความคืบหน้าเป็นข้อมูลที่ผู้ใช้บันทึกเอง</footer>
+  </main>
+  <script src="data.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="cloud.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
