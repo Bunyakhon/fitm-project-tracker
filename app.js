@@ -99,12 +99,12 @@ function renderScope(task, full) {
 function renderTask(task) {
   const saved = record(task);
   const status = ownStatus(task);
+  const reference = String(task.reference || '').replace(/^\s*[—–-]\s*/, '').trim();
   return `<article class="task">
     <div class="task-top">
       <div class="task-left">
-        <span class="tag">${safe(task.id)}</span>
+        <span class="tag" aria-label="เลขข้อ PDF: ${safe(reference)}">${safe(reference)}</span>
         <div class="task-title">${safe(task.title)}</div>
-        <span class="reference">เลขข้อ PDF: ${safe(task.reference)}</span>
         <span class="role"><b>บทบาท:</b> ${safe(task.role)}</span>
       </div>
       <label class="status-control">สถานะ
