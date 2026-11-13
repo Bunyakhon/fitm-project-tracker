@@ -15,18 +15,13 @@ const STATUS_LABELS = {
   [STATUS.IN_PROGRESS]: 'กำลังดำเนินการ',
   [STATUS.COMPLETED]: 'เสร็จแล้ว'
 };
-const KEY = 'coopconnect-project-progress-v3';
+const CLOUD = window.TrackerCloud;
+const drafts = new Map();
+const noteTimers = new Map();
+const noteSaving = new Set();
 let week = 1;
 let expanded = false;
 let state = {};
-
-try {
-  const saved = JSON.parse(localStorage.getItem(KEY) || '{}');
-  if (saved && typeof saved === 'object' && !Array.isArray(saved)) state = saved;
-} catch (error) {
-  state = {};
-}
-
 const el = id => document.getElementById(id);
 const safe = value => String(value ?? '').replace(/[&<>"']/g, character => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -52,20 +47,19 @@ const formatDate = value => value ? new Date(value).toLocaleString('th-TH', {
   dateStyle: 'medium', timeStyle: 'short'
 }) : 'ยังไม่มีการปรับปรุง';
 
-function persist() {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(state));
-  } catch (error) {
-    window.alert('ไม่สามารถบันทึกในเบราว์เซอร์ได้ กรุณาส่งออกไฟล์ JSON');
-  }
+function errorMessage(error) { window.alert('บันทึกข้อมูลกลางไม่สำเร็จ: ' + error.message); }
+function updateActionPermissions() {
+  el('import').disabled = !CLOUD.canEdit();
+  el('reset').disabled = !CLOUD.canEdit();
+  el('export').disabled = !CLOUD.isReady();
 }
-
 function updateDashboard() {
   el('totalCount').textContent = TASKS.length;
   el('notStartedCount').textContent = countStatus(TASKS, STATUS.NOT_STARTED);
   el('inProgressCount').textContent = countStatus(TASKS, STATUS.IN_PROGRESS);
   el('completedCount').textContent = countStatus(TASKS, STATUS.COMPLETED);
-  el('totalProgress').textContent = `${totalProgress()}%`;
+  el('totalProgress').textContent = CLOUD.isReady() ? `${totalProgress()}%` : 'กำลังโหลด…';
+  updateActionPermissions();
 }
 
 function renderWeeks() {
@@ -99,6 +93,8 @@ function renderScope(task, full) {
 function renderTask(task) {
   const saved = record(task);
   const status = ownStatus(task);
+  const editable = CLOUD.canEdit();
+  const note = drafts.has(task.id) ? drafts.get(task.id) : saved.note;
   const reference = String(task.reference || '').replace(/^\s*[—–-]\s*/, '').trim();
   return `<article class="task">
     <div class="task-top">
@@ -108,7 +104,7 @@ function renderTask(task) {
         <span class="role"><b>บทบาท:</b> ${safe(task.role)}</span>
       </div>
       <label class="status-control">สถานะ
-        <select data-status="${safe(task.id)}" aria-label="สถานะ ${safe(task.id)}">
+        <select data-status="${safe(task.id)}" aria-label="สถานะ ${safe(task.id)}" ${editable ? "" : "disabled"}>
           <option value="${STATUS.NOT_STARTED}" ${status === STATUS.NOT_STARTED ? 'selected' : ''}>ยังไม่เริ่ม</option>
           <option value="${STATUS.IN_PROGRESS}" ${status === STATUS.IN_PROGRESS ? 'selected' : ''}>กำลังดำเนินการ</option>
           <option value="${STATUS.COMPLETED}" ${status === STATUS.COMPLETED ? 'selected' : ''}>เสร็จแล้ว</option>
@@ -120,7 +116,7 @@ function renderTask(task) {
       <summary>${expanded ? 'ย่อรายละเอียด' : 'อ่านรายละเอียดทั้งหมด'}</summary>
       ${renderScope(task, true)}
       <label for="note-${safe(task.id)}">โน้ตความคืบหน้า</label>
-      <textarea id="note-${safe(task.id)}" data-note="${safe(task.id)}" placeholder="บันทึกโน้ตของงานนี้">${safe(saved.note)}</textarea>
+      <textarea id="note-${safe(task.id)}" data-note="${safe(task.id)}" maxlength="10000" placeholder="${editable ? "บันทึกโน้ตของงานนี้" : "เข้าสู่ระบบและรับสิทธิ์ก่อนแก้ไข"}" ${editable ? "" : "disabled"}>${safe(note)}</textarea>
       <div class="updated">ปรับปรุงล่าสุด: ${safe(formatDate(saved.updatedAt))}</div>
     </details>
     <div class="current-status">สถานะปัจจุบัน: <b>${STATUS_LABELS[status]}</b></div>
@@ -156,13 +152,25 @@ function render() {
     : '<div class="empty">ไม่พบรายการตามตัวกรอง</div>';
 }
 
-function resetAll() {
-  if (!window.confirm('รีเซ็ตความคืบหน้าทั้งหมดและล้างโน้ตของ Tracker นี้หรือไม่?')) return;
-  state = initialState();
-  persist();
-  render();
+async function resetAll() {
+  if (!CLOUD.canEdit()) return;
+  if (!window.confirm('รีเซ็ตสถานะและล้างโน้ตทั้ง 68 ข้อสำหรับทุกคนหรือไม่?')) return;
+  try { await CLOUD.saveMany(initialState()); drafts.clear(); render(); }
+  catch(error) { errorMessage(error); }
 }
-
+async function saveNote(id) {
+  if (!CLOUD.canEdit() || noteSaving.has(id) || !drafts.has(id)) return;
+  noteSaving.add(id);
+  try {
+    while (drafts.has(id)) {
+      const value = drafts.get(id);
+      await CLOUD.saveField(id,'note',value);
+      if(drafts.get(id)===value) drafts.delete(id);
+    }
+    if(!document.activeElement?.matches('[data-note]')) render();
+  } catch(error) { errorMessage(error); }
+  finally { noteSaving.delete(id); }
+}
 el('weeks').addEventListener('click', event => {
   const button = event.target.closest('[data-week]');
   if (!button) return;
@@ -174,31 +182,27 @@ el('weeks').addEventListener('click', event => {
   render();
 });
 
-el('tasks').addEventListener('change', event => {
+el('tasks').addEventListener('change', async event => {
   const input = event.target;
-  if (!input.matches('[data-status]')) return;
-  state[input.dataset.status] = {
-    ...record({ id: input.dataset.status }),
-    status: input.value,
-    updatedAt: new Date().toISOString()
-  };
-  persist();
-  render();
+  if(input.matches('[data-note]')) {
+    const id=input.dataset.note;
+    clearTimeout(noteTimers.get(id));
+    await saveNote(id);
+    return;
+  }
+  if(!input.matches('[data-status]') || !CLOUD.canEdit()) return;
+  input.disabled = true;
+  try { await CLOUD.saveField(input.dataset.status,'status',input.value); }
+  catch(error) { errorMessage(error); render(); }
 });
-
 el('tasks').addEventListener('input', event => {
-  const input = event.target;
-  if (!input.matches('[data-note]')) return;
-  state[input.dataset.note] = {
-    ...record({ id: input.dataset.note }),
-    note: input.value,
-    updatedAt: new Date().toISOString()
-  };
-  persist();
-  const updated = input.closest('.details').querySelector('.updated');
-  updated.textContent = `ปรับปรุงล่าสุด: ${formatDate(state[input.dataset.note].updatedAt)}`;
+  const input=event.target;
+  if(!input.matches('[data-note]') || !CLOUD.canEdit()) return;
+  const id=input.dataset.note;
+  drafts.set(id,input.value);
+  clearTimeout(noteTimers.get(id));
+  noteTimers.set(id,setTimeout(()=>{void saveNote(id);},850));
 });
-
 el('tasks').addEventListener('click', event => {
   const summary = event.target.closest('summary');
   if (!summary) return;
@@ -218,8 +222,9 @@ el('expand').addEventListener('click', () => {
   el('expand').textContent = expanded ? 'ย่อรายละเอียดทั้งหมด' : 'ขยายรายละเอียดทั้งหมด';
   render();
 });
-el('reset').addEventListener('click', resetAll);
+el('reset').addEventListener('click', () => {void resetAll();});
 el('export').addEventListener('click', () => {
+  if(!CLOUD.isReady()) return window.alert('ยังโหลดข้อมูลกลางไม่สำเร็จ');
   const output = {
     format: 'coopconnect-project-progress-v3',
     date: new Date().toISOString(),
@@ -235,6 +240,7 @@ el('export').addEventListener('click', () => {
 });
 el('import').addEventListener('click', () => el('importFile').click());
 el('importFile').addEventListener('change', async event => {
+  if(!CLOUD.canEdit()) return;
   const file = event.target.files[0];
   if (!file) return;
   try {
@@ -251,10 +257,10 @@ el('importFile').addEventListener('change', async event => {
         note: String(value.note || '').slice(0, 10000),
         updatedAt: value.updatedAt || null
       }]));
-    state = normalizeState(validItems);
-    persist();
+    await CLOUD.saveMany(normalizeState(validItems));
+    drafts.clear();
     render();
-    window.alert('นำเข้าความคืบหน้าสำเร็จ');
+    window.alert('นำเข้าข้อมูลลง Supabase สำเร็จ');
   } catch (error) {
     window.alert(`นำเข้าไม่สำเร็จ: ${error.message}`);
   } finally {
@@ -264,4 +270,14 @@ el('importFile').addEventListener('change', async event => {
 
 const roles = [...new Set(TASKS.map(task => task.role))].sort();
 el('roleFilter').insertAdjacentHTML('beforeend', roles.map(role => `<option value="${safe(role)}">${safe(role)}</option>`).join(''));
+CLOUD.start({
+  onSnapshot: snapshot => {
+    state = normalizeState(snapshot);
+    if(document.activeElement?.matches('[data-note]')) {
+      updateDashboard();
+      renderWeeks();
+    } else render();
+  },
+  onAccess: () => render()
+});
 render();

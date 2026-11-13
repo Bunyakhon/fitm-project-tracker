@@ -14,6 +14,33 @@
       <p>ติดตามความคืบหน้าการพัฒนาโครงงานพิเศษตามขอบเขตทั้งหมด 68 ข้อ</p>
     </header>
 
+    <section class="cloud-panel" aria-label="ข้อมูลกลาง Supabase">
+      <div class="cloud-header">
+        <strong id="cloudStatus" role="status" aria-live="polite">กำลังเชื่อมต่อฐานข้อมูลกลาง…</strong>
+        <span>ข้อมูลความคืบหน้าเป็นสาธารณะ ผู้ได้รับสิทธิ์เท่านั้นที่แก้ไขได้</span>
+      </div>
+      <div id="authSignedOut">
+        <form id="authSignInForm" class="cloud-form">
+          <label>อีเมล<input id="authEmail" type="email" autocomplete="email" required></label>
+          <label>รหัสผ่าน<input id="authPasswordInput" type="password" autocomplete="current-password" required></label>
+          <button id="authSignInButton" type="submit" class="btn primary">เข้าสู่ระบบเพื่อแก้ไข</button>
+          <button id="authResetLink" type="button" class="btn">ขอลิงก์ตั้งรหัสผ่าน</button>
+        </form>
+      </div>
+      <div id="authSignedIn" hidden>
+        <span id="authUserLabel"></span> · <span id="authRoleLabel"></span>
+        <button id="authShowPassword" type="button" class="btn">ตั้ง/เปลี่ยนรหัสผ่าน</button>
+        <button id="authSignOut" type="button" class="btn">ออกจากระบบ</button>
+      </div>
+      <div id="authPasswordForm" hidden>
+        <form id="authSavePasswordForm" class="cloud-form">
+          <label>รหัสผ่านใหม่<input id="authNewPassword" type="password" minlength="8" autocomplete="new-password" required></label>
+          <label>ยืนยันรหัสผ่าน<input id="authConfirmPassword" type="password" minlength="8" autocomplete="new-password" required></label>
+          <button type="submit" class="btn primary">บันทึกรหัสผ่าน</button>
+        </form>
+      </div>
+      <p id="authMessage" aria-live="polite" role="status"></p>
+    </section>
     <section class="summary" aria-label="ภาพรวมความคืบหน้า">
       <div class="stat"><small>ขอบเขตทั้งหมด</small><strong id="totalCount">68</strong><span class="sub">ข้อ</span></div>
       <div class="stat"><small>ยังไม่เริ่ม</small><strong id="notStartedCount">68</strong><span class="sub">ข้อ</span></div>
@@ -33,7 +60,7 @@
           <input type="file" id="importFile" accept=".json,application/json" hidden>
           <button class="btn danger" id="reset">รีเซ็ตความคืบหน้าทั้งหมด</button>
         </div>
-        <p class="intro">สถานะและโน้ตบันทึกใน LocalStorage ของเบราว์เซอร์นี้เท่านั้น</p>
+        <p class="intro">สถานะและโน้ตอ่านจาก Supabase กลาง · ต้องล็อกอินและได้รับสิทธิ์เพื่อแก้ไข</p>
       </aside>
 
       <section class="panel">
@@ -64,6 +91,8 @@
     <footer class="footer">ข้อมูลขอบเขตจากโครงงานพิเศษ CoopConnect ข้อ 2.3 แบ่งเป็นแผนพัฒนา 10 สัปดาห์ สถานะความคืบหน้าเป็นข้อมูลที่ผู้ใช้บันทึกเอง</footer>
   </main>
   <script src="data.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="cloud.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

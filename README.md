@@ -34,3 +34,17 @@ Export และ Import ใช้ไฟล์ JSON รูปแบบเดี�
 | 9 | 8 |
 | 10 | 2 |
 | **รวม** | **68** |
+
+ 
+## Supabase shared progress
+
+- ความคืบหน้าทั้ง 68 ข้อและโน้ตเป็นข้อมูลกลางจากตาราง `public.tracker_progress` (ไม่ใช้ LocalStorage v3 สำหรับสถานะอีกแล้ว)
+- ประชาชนทั่วไปอ่านได้; การแก้ไขต้องล็อกอินและมี UID อยู่ใน `public.tracker_editors` ตาม RLS policy
+- Realtime ต้องเปิด `supabase_realtime` สำหรับตาราง `tracker_progress`
+- หากคำเชิญอีเมลหมดอายุ ใช้ “ขอลิงก์ตั้งรหัสผ่าน” บนเว็บไซต์แทน เมื่อยืนยันตัวตนแล้วตั้งรหัสผ่านใหม่
+- Import / Reset เป็นการแก้ไขข้อมูลกลางสำหรับทุกคน เฉพาะบัญชีผู้มีสิทธิ์
+- **โน้ตเป็นข้อมูลสาธารณะ** ห้ามใส่ข้อมูลลับหรือข้อมูลส่วนบุคคล
+- Publishable Key ใน cloud.js ใช้บนเว็บได้เมื่อ RLS ถูกต้อง; ห้ามนำ Secret Key, service_role หรือ Database Password ลงโค้ด
+- ให้สิทธิ์ผู้แก้ไขหลังสร้างบัญชีใน Authentication → Users โดยใช้ SQL Editor:
+  `insert into public.tracker_editors(user_id) values ('YOUR-REAL-USER-UUID') on conflict(user_id) do nothing;`
+- ก่อน Merge PR ต้องทดสอบกับ Supabase จริงและบัญชีผู้แก้ไข/ผู้ชมสองเบราว์เซอร์ ตรวจ Console, Network และ GitHub Pages ด้วย
