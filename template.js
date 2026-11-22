@@ -46,11 +46,54 @@ function renderProjects(){
  :'ยังไม่มีโปรเจกต์ · ผู้ได้รับสิทธิ์ Editor สามารถสร้างโปรเจกต์ใหม่จาก Template นี้ได้';
 }
 function renderStats(){
- $('weekCount').textContent=weeks.length;$('totalCount').textContent=tasks.length;
- $('notStarted').textContent=tasks.filter(t=>t.status==='not_started').length;
- $('inProgress').textContent=tasks.filter(t=>t.status==='in_progress').length;
- $('completed').textContent=completed(tasks);
- $('overallProgress').textContent=percent(tasks)+'%';
+ const total=tasks.length;
+ const notStartedCount=tasks.filter(t=>t.status==='not_started').length;
+ const inProgressCount=tasks.filter(t=>t.status==='in_progress').length;
+ const completedCount=completed(tasks);
+ const overall=percent(tasks);
+ $('weekCount').textContent=weeks.length;
+ $('totalCount').textContent=total;
+ $('notStarted').textContent=notStartedCount;
+ $('inProgress').textContent=inProgressCount;
+ $('completed').textContent=completedCount;
+ $('overallProgress').textContent=overall+'%';
+
+ // Use exact ratios for the donut segments so the angles always add up to 100%.
+ const fraction=count=>total?count*100/total:0;
+ const donePercent=fraction(completedCount);
+ const doingPercent=fraction(inProgressCount);
+ const donut=$('projectDonut');
+ donut.style.setProperty('--donut-done',donePercent+'%');
+ donut.style.setProperty('--donut-doing-end',(donePercent+doingPercent)+'%');
+ donut.setAttribute('aria-label',
+   'ทั้งหมด '+total+' งาน เสร็จแล้ว '+completedCount+' งาน ('+overall+'%) กำลังดำเนินการ '+
+   inProgressCount+' งาน ยังไม่เริ่ม '+notStartedCount+' งาน');
+ $('projectDonutPercent').textContent=overall+'%';
+ $('projectDonutCount').textContent='เสร็จแล้ว '+completedCount+' จาก '+total+' งาน';
+ $('chartTotalTasks').textContent=total;
+ for(const [labelId,barId,count] of [
+   ['chartNotStarted','barNotStarted',notStartedCount],
+   ['chartInProgress','barInProgress',inProgressCount],
+   ['chartCompleted','barCompleted',completedCount]
+ ]){
+   const ratio=fraction(count);
+   $(labelId).textContent=count+' งาน · '+Math.round(ratio)+'%';
+   $(barId).style.width=ratio+'%';
+ }
+ // Weekly chart follows the selected project's weeks and the current task statuses.
+ $('weeklyProgressChart').innerHTML=weeks.length?weeks.map(w=>{
+   const list=perWeek(w.id);
+   const rate=percent(list);
+   return '<div class="weekly-chart-row" role="listitem">'+
+     '<div class="weekly-chart-meta"><div class="weekly-chart-name">'+
+       '<span class="weekly-chart-number">'+w.position+'</span>'+
+       '<strong title="'+esc(w.title)+'">'+esc(w.title)+'</strong></div>'+
+       '<span class="weekly-chart-rate">'+rate+'%</span></div>'+
+     '<div class="weekly-chart-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+rate+
+       '" aria-label="'+esc('สัปดาห์ที่ '+w.position+' '+w.title)+'">'+
+       '<span style="width:'+rate+'%"></span></div>'+
+     '<div class="weekly-chart-count">เสร็จแล้ว '+completed(list)+' / '+list.length+' งาน</div></div>';
+ }).join(''):'<p class="weekly-empty">โปรเจกต์นี้ยังไม่มีสัปดาห์</p>';
 }
 function renderWeeks(){
  $('weeks').innerHTML=weeks.length?weeks.map(w=>{
