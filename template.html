@@ -17,7 +17,6 @@
     <div class="eyebrow">FITM · PROJECT TRACKER</div>
     <h1>บริหารโปรเจกต์อย่างเป็นระบบ เห็นความคืบหน้าได้ในที่เดียว</h1>
     <p>วางแผนงานรายสัปดาห์ ติดตามสถานะ และเก็บหลักฐานการทำงานร่วมกัน เริ่มต้นจาก CoopConnect 68 ข้อ หรือสร้างโปรเจกต์ใหม่ตามเป้าหมายของทีม</p>
-    <a class="hero-back" href="./legacy.html">เปิด Tracker เวอร์ชันเดิม</a>
   </header>
 
   <section class="cloud-panel" aria-label="การเชื่อมต่อและสิทธิ์การใช้งาน">
@@ -77,6 +76,81 @@
     <div class="stat"><small>กำลังดำเนินการ</small><strong id="inProgress">0</strong><span class="sub">ข้อ</span></div>
     <div class="stat"><small>เสร็จแล้ว</small><strong id="completed">0</strong><span class="sub">ข้อ</span></div>
     <div class="stat"><small>ความคืบหน้ารวม</small><strong id="overallProgress">0%</strong><span class="sub">เทียบจากข้อที่เสร็จแล้ว</span></div>
+  </section>
+
+  <section class="insights-panel" aria-labelledby="insightsHeading">
+    <div class="insights-heading">
+      <div>
+        <span class="section-kicker">PROJECT INSIGHTS</span>
+        <h3 id="insightsHeading">วิเคราะห์ความคืบหน้าโปรเจกต์</h3>
+        <p>ข้อมูลทุกกราฟคำนวณจากสถานะงานจริง และอัปเดตเมื่อเลือกโปรเจกต์หรือเปลี่ยนสถานะ</p>
+      </div>
+      <span class="insights-live"><span class="insights-live-dot" aria-hidden="true"></span>ภาพรวมโปรเจกต์ที่เลือก</span>
+    </div>
+    <div class="insights-grid">
+      <div class="insight-card donut-card">
+        <div class="insight-card-heading">
+          <span class="insight-kicker">OVERALL COMPLETION</span>
+          <h4>เปอร์เซ็นต์งานที่เสร็จแล้ว</h4>
+        </div>
+        <div class="donut-stage">
+          <div id="projectDonut" class="project-donut" role="img" aria-label="ยังไม่มีข้อมูลความคืบหน้า">
+            <div class="donut-center" aria-hidden="true">
+              <span>ความคืบหน้ารวม</span>
+              <strong id="projectDonutPercent">0%</strong>
+              <small id="projectDonutCount">เสร็จแล้ว 0 จาก 0 งาน</small>
+            </div>
+          </div>
+        </div>
+        <p class="insight-hint">คิดจากจำนวนงานที่เสร็จสมบูรณ์ เทียบกับงานทั้งหมดของโปรเจกต์</p>
+      </div>
+
+      <div class="insight-card breakdown-card">
+        <div class="insight-card-heading">
+          <span class="insight-kicker">STATUS DISTRIBUTION</span>
+          <h4>สัดส่วนสถานะงาน</h4>
+        </div>
+        <div class="breakdown-overview">
+          <strong id="chartTotalTasks">0</strong>
+          <span>งานทั้งหมดในโปรเจกต์</span>
+        </div>
+        <div class="breakdown-items">
+          <div class="breakdown-item">
+            <div class="breakdown-label">
+              <span><i class="status-dot not-started-dot" aria-hidden="true"></i>ยังไม่เริ่ม</span>
+              <strong id="chartNotStarted">0 งาน · 0%</strong>
+            </div>
+            <div class="breakdown-track"><span class="breakdown-fill not-started-fill" id="barNotStarted"></span></div>
+          </div>
+          <div class="breakdown-item">
+            <div class="breakdown-label">
+              <span><i class="status-dot in-progress-dot" aria-hidden="true"></i>กำลังดำเนินการ</span>
+              <strong id="chartInProgress">0 งาน · 0%</strong>
+            </div>
+            <div class="breakdown-track"><span class="breakdown-fill in-progress-fill" id="barInProgress"></span></div>
+          </div>
+          <div class="breakdown-item">
+            <div class="breakdown-label">
+              <span><i class="status-dot completed-dot" aria-hidden="true"></i>เสร็จแล้ว</span>
+              <strong id="chartCompleted">0 งาน · 0%</strong>
+            </div>
+            <div class="breakdown-track"><span class="breakdown-fill completed-fill" id="barCompleted"></span></div>
+          </div>
+        </div>
+        <p class="insight-hint">สีของกราฟโดนัทและแถบสถานะใช้ความหมายเดียวกัน</p>
+      </div>
+
+      <div class="insight-card weekly-card">
+        <div class="insight-card-heading">
+          <span class="insight-kicker">WEEKLY PROGRESS</span>
+          <h4>ความคืบหน้ารายสัปดาห์</h4>
+        </div>
+        <div id="weeklyProgressChart" class="weekly-progress-chart" role="list" aria-label="กราฟความคืบหน้ารายสัปดาห์">
+          <p class="weekly-empty">กำลังโหลดข้อมูลสัปดาห์…</p>
+        </div>
+        <p class="insight-hint">แต่ละแถบแสดงเปอร์เซ็นต์งานที่เสร็จแล้วของสัปดาห์นั้น</p>
+      </div>
+    </div>
   </section>
 
   <div class="layout">
