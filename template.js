@@ -18,7 +18,7 @@ const percent=rows=>rows.length?Math.round(completed(rows)*100/rows.length):0;
 let projects=[],weeks=[],tasks=[],projectId=new URLSearchParams(location.search).get('project')||'',weekId='';
 let user=null,editor=false,ready=false,busy=false,editingProject=false,editingWeek='',editingTask='';
 let request=0,reloadHandle;
- const openTaskIds=new Set(), noteDrafts=new Map(), captionDrafts=new Map();
+ const openTaskIds=new Set(), noteDrafts=new Map();
  let renderedEditorId=null;
 const currentProject=()=>projects.find(p=>p.id===projectId);
 const currentWeek=()=>weeks.find(w=>w.id===weekId);
@@ -130,7 +130,6 @@ function evidenceMarkup(t){
     (!user?'<p class="evidence-note">กรุณาเข้าสู่ระบบเพื่อดูหลักฐานภาพ (Storage เป็น Private)</p>':
       (count?'<div class="evidence-grid">'+listing+'</div>':'<p class="evidence-empty">ยังไม่มีรูปภาพหลักฐาน</p>'))+
     (canEdit()?'<div class="evidence-upload"><h5>เพิ่มรูปหลักฐาน</h5><p class="evidence-note">JPG / PNG / WebP · รูปละไม่เกิน 5 MB · เลือกได้หลายรูป</p>'+
-      '<label class="upload-field">คำอธิบายรูป (ไม่บังคับ)<input data-evidence-caption="'+esc(t.id)+'" type="text" maxlength="500" placeholder="เช่น หน้าเข้าสู่ระบบที่ทดสอบแล้ว"></label>'+
       '<label class="upload-field">เลือกไฟล์รูปภาพ<input data-evidence-upload="'+esc(t.id)+'" type="file" accept="image/jpeg,image/png,image/webp" multiple></label>'+
       '<p class="evidence-note">รูปจะถูกอัปโหลดทันทีเมื่อเลือกไฟล์</p></div>':'')+
   '</section>';
@@ -157,14 +156,13 @@ function card(t){
 }
 function rememberTaskUI(rememberOpen=true){
  const editorId=user&&editor?user.id:null;
- if(editorId!==renderedEditorId){noteDrafts.clear();captionDrafts.clear();}
+ if(editorId!==renderedEditorId){noteDrafts.clear();}
  for(const card of $('tasks').querySelectorAll('[data-task]')){
   const id=card.dataset.task,panel=card.querySelector('details.details');
   if(rememberOpen&&panel){if(panel.open)openTaskIds.add(id);else openTaskIds.delete(id);}
   if(!editorId||editorId!==renderedEditorId)continue;
-  const note=card.querySelector('[data-note]'),caption=card.querySelector('[data-evidence-caption]');
+  const note=card.querySelector('[data-note]');
   if(note){if(note.value!==note.defaultValue)noteDrafts.set(id,note.value);else noteDrafts.delete(id);}
-  if(caption){if(caption.value)captionDrafts.set(id,caption.value);else captionDrafts.delete(id);}
  }
  renderedEditorId=editorId;
 }
@@ -175,7 +173,7 @@ function syncExpandButton(){
 function renderTasks(rememberOpen=true){
  rememberTaskUI(rememberOpen);
  const active=document.activeElement;
- const field=active?.matches('[data-note]')?'note':active?.matches('[data-evidence-caption]')?'evidence-caption':'';
+ const field=active?.matches('[data-note]')?'note':'';
  const activeId=field?active.closest('[data-task]')?.dataset.task:null;
  const selection=field?[active.selectionStart,active.selectionEnd,active.selectionDirection]:null;
  const term=$('search').value.trim().toLocaleLowerCase(),s=$('statusFilter').value,r=$('roleFilter').value;
@@ -186,12 +184,11 @@ function renderTasks(rememberOpen=true){
  $('tasks').innerHTML=visible.length?visible.map(card).join(''):'<div class="empty">'+
   (list.length?'ไม่พบข้อที่ตรงกับตัวกรอง':'ยังไม่มีข้อ / งาน · กด + เพิ่มข้อ / งาน')+'</div>';
  for(const card of $('tasks').querySelectorAll('[data-task]')){
-  const id=card.dataset.task,note=card.querySelector('[data-note]'),caption=card.querySelector('[data-evidence-caption]');
+  const id=card.dataset.task,note=card.querySelector('[data-note]');
   if(renderedEditorId&&note&&noteDrafts.has(id)){
    const draft=noteDrafts.get(id);
    if(draft===note.defaultValue)noteDrafts.delete(id);else note.value=draft;
   }
-  if(renderedEditorId&&caption&&captionDrafts.has(id))caption.value=captionDrafts.get(id);
   if(id===activeId&&field&&renderedEditorId){
    const next=card.querySelector('[data-'+field+']');
    if(next&&!next.disabled){next.focus({preventScroll:true});if(selection)next.setSelectionRange(...selection);}
@@ -253,9 +250,6 @@ async function uploadEvidence(input){
  if(!tasks.some(t=>t.id===taskId))throw Error('ไม่พบข้อกำหนด');
  const fileList=[...input.files];
  if(!fileList.length)return;
- const captionInput=input.closest('.task').querySelector('[data-evidence-caption]');
- const caption=(captionInput?.value||'').trim();
- if(caption.length>500)throw Error('คำอธิบายยาวเกิน 500 ตัวอักษร');
  if(evidence.filter(r=>r.task_id===taskId).length+fileList.length>30)throw Error('จำกัดไม่เกิน 30 รูปต่อข้อ');
  for(const file of fileList){
    if(!ALLOWED_IMAGE_TYPES[file.type])throw Error('รองรับเฉพาะ JPG, PNG, WebP');
@@ -271,7 +265,7 @@ async function uploadEvidence(input){
      accepted(stored);
      const inserted=await db.from(E).insert({
        task_id:taskId,file_path:filePath,file_name:file.name.slice(0,250),
-       mime_type:file.type,bytes:file.size,caption,uploaded_by:user.id
+       mime_type:file.type,bytes:file.size,caption:'',uploaded_by:user.id
      });
      if(inserted.error){
        await db.storage.from(BUCKET).remove([filePath]);
@@ -280,7 +274,6 @@ async function uploadEvidence(input){
    }
    await loadEvidence();
    render();
-   captionDrafts.delete(taskId);
    tell('บันทึกหลักฐาน '+fileList.length+' รูปลง Supabase แล้ว');
  }finally{busy=false;render();}
 }
