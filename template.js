@@ -16,8 +16,10 @@ const affected=result=>{const rows=accepted(result);if(!rows?.length)throw new E
 const completed=rows=>rows.filter(r=>r.status==='completed').length;
 const percent=rows=>rows.length?Math.round(completed(rows)*100/rows.length):0;
 let projects=[],weeks=[],tasks=[],projectId=new URLSearchParams(location.search).get('project')||'',weekId='';
-let user=null,editor=false,ready=false,busy=false,expanded=false,editingProject=false,editingWeek='',editingTask='';
+let user=null,editor=false,ready=false,busy=false,editingProject=false,editingWeek='',editingTask='';
 let request=0,reloadHandle;
+ const openTaskIds=new Set(), noteDrafts=new Map(), captionDrafts=new Map();
+ let renderedEditorId=null;
 const currentProject=()=>projects.find(p=>p.id===projectId);
 const currentWeek=()=>weeks.find(w=>w.id===weekId);
 const perWeek=id=>tasks.filter(t=>t.week_id===id);
@@ -118,18 +120,19 @@ function evidenceMarkup(t){
     const url=signedEvidence.get(row.id);
     if(!url) return '<div class="evidence-item"><p>ไม่สามารถเปิดภาพนี้ได้</p></div>';
     return '<div class="evidence-item">'+
-      '<a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer" title="เปิดรูปขนาดเต็ม">'+
+      '<a class="evidence-preview" href="'+esc(url)+'" target="_blank" rel="noopener noreferrer" title="เปิดรูปขนาดเต็ม">'+
       '<img src="'+esc(url)+'" alt="'+esc(row.caption||row.file_name)+'" loading="lazy"></a>'+
-      '<p>'+esc(row.caption||row.file_name)+'</p><a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">ดูภาพเต็ม</a>'+
+      '<p class="evidence-caption">'+esc(row.caption||row.file_name)+'</p><div class="evidence-actions"><a class="btn evidence-view" href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">ดูภาพเต็ม</a>'+
       (canEdit()?'<button type="button" class="btn danger" data-delete-evidence="'+esc(row.id)+'">ลบรูป</button>':'')+
-    '</div>';
+    '</div></div>';
   }).join('');
   return '<section class="task-evidence"><h4>รูปภาพหลักฐาน ('+count+')</h4>'+
     (!user?'<p class="evidence-note">กรุณาเข้าสู่ระบบเพื่อดูหลักฐานภาพ (Storage เป็น Private)</p>':
-      '<div class="evidence-grid">'+listing+'</div>')+
-    (canEdit()?'<label class="upload-field">เพิ่มรูปหลักฐาน JPG/PNG/WebP (รูปละไม่เกิน 5 MB)'+
-      '<input data-evidence-upload="'+esc(t.id)+'" type="file" accept="image/jpeg,image/png,image/webp" multiple></label>'+
-      '<label class="upload-field">คำอธิบายรูป <input data-evidence-caption="'+esc(t.id)+'" type="text" maxlength="500" placeholder="เช่น หน้าเข้าสู่ระบบที่ทดสอบแล้ว"></label>':'')+
+      (count?'<div class="evidence-grid">'+listing+'</div>':'<p class="evidence-empty">ยังไม่มีรูปภาพหลักฐาน</p>'))+
+    (canEdit()?'<div class="evidence-upload"><h5>เพิ่มรูปหลักฐาน</h5><p class="evidence-note">JPG / PNG / WebP · รูปละไม่เกิน 5 MB · เลือกได้หลายรูป</p>'+
+      '<label class="upload-field">คำอธิบายรูป (ไม่บังคับ)<input data-evidence-caption="'+esc(t.id)+'" type="text" maxlength="500" placeholder="เช่น หน้าเข้าสู่ระบบที่ทดสอบแล้ว"></label>'+
+      '<label class="upload-field">เลือกไฟล์รูปภาพ<input data-evidence-upload="'+esc(t.id)+'" type="file" accept="image/jpeg,image/png,image/webp" multiple></label>'+
+      '<p class="evidence-note">รูปจะถูกอัปโหลดทันทีเมื่อเลือกไฟล์</p></div>':'')+
   '</section>';
 }
 function card(t){
@@ -144,15 +147,37 @@ function card(t){
  '<div class="task-top"><div class="task-left"><span class="task-badge">'+esc(t.reference||'ไม่มีเลขข้อ')+'</span>'+
  '<div class="task-title">'+esc(t.title)+'</div><span class="role"><b>บทบาท:</b> '+esc(t.role||'ยังไม่ระบุ')+'</span></div>'+
  '<label class="status-control">สถานะ<select data-status="'+esc(t.id)+'"'+attr+'>'+options+'</select></label></div>'+
- '<div class="scope scope-preview"><b>รายละเอียดขอบเขต</b><p class="task-description'+(expanded?'':' preview')+'">'+description+'</p>'+preview+'</div>'+
- '<details class="details"'+(expanded?' open':'')+'><summary>อ่านรายละเอียดทั้งหมด / โน้ต</summary><p class="task-description">'+description+'</p>'+bulletHtml+evidenceMarkup(t)+
- '<div class="task-note"><label>โน้ตความคืบหน้า</label><textarea data-note="'+esc(t.id)+'" maxlength="10000"'+attr+'>'+
+ '<div class="scope scope-preview"><b>รายละเอียดขอบเขต</b><p class="task-description preview">'+description+'</p>'+preview+'</div>'+
+ '<details class="details"'+(openTaskIds.has(t.id)?' open':'')+'><summary>อ่านรายละเอียดทั้งหมด / โน้ต</summary><p class="task-description">'+description+'</p>'+bulletHtml+evidenceMarkup(t)+
+ '<div class="task-note"><label for="note-'+esc(t.id)+'">โน้ตความคืบหน้า</label><textarea id="note-'+esc(t.id)+'" data-note="'+esc(t.id)+'" maxlength="10000" placeholder="บันทึกสิ่งที่ทำแล้ว ปัญหาที่พบ หรือแผนงานถัดไป…"'+attr+'>'+
  esc(t.note||'')+'</textarea><div class="actions"><button type="button" class="btn primary" data-save-note="'+esc(t.id)+'"'+attr+'>บันทึกโน้ต</button></div></div></details>'+
  '<div class="task-commands"><button type="button" class="btn" data-edit-task="'+esc(t.id)+'"'+attr+'>แก้ไขข้อ / ย้ายสัปดาห์</button>'+
  '<button type="button" class="btn danger" data-delete-task="'+esc(t.id)+'"'+preventDelete+'>ลบข้อ</button></div>'+
  '<div class="current-status">สถานะปัจจุบัน: <b>'+esc(labels[t.status]||labels.not_started)+'</b></div></article>';
 }
-function renderTasks(){
+function rememberTaskUI(rememberOpen=true){
+ const editorId=user&&editor?user.id:null;
+ if(editorId!==renderedEditorId){noteDrafts.clear();captionDrafts.clear();}
+ for(const card of $('tasks').querySelectorAll('[data-task]')){
+  const id=card.dataset.task,panel=card.querySelector('details.details');
+  if(rememberOpen&&panel){if(panel.open)openTaskIds.add(id);else openTaskIds.delete(id);}
+  if(!editorId||editorId!==renderedEditorId)continue;
+  const note=card.querySelector('[data-note]'),caption=card.querySelector('[data-evidence-caption]');
+  if(note){if(note.value!==note.defaultValue)noteDrafts.set(id,note.value);else noteDrafts.delete(id);}
+  if(caption){if(caption.value)captionDrafts.set(id,caption.value);else captionDrafts.delete(id);}
+ }
+ renderedEditorId=editorId;
+}
+function syncExpandButton(){
+ const list=perWeek(weekId);
+ $('expand').textContent=list.length&&list.every(t=>openTaskIds.has(t.id))?'ย่อรายละเอียดทั้งหมด':'ขยายรายละเอียดทั้งหมด';
+}
+function renderTasks(rememberOpen=true){
+ rememberTaskUI(rememberOpen);
+ const active=document.activeElement;
+ const field=active?.matches('[data-note]')?'note':active?.matches('[data-evidence-caption]')?'evidence-caption':'';
+ const activeId=field?active.closest('[data-task]')?.dataset.task:null;
+ const selection=field?[active.selectionStart,active.selectionEnd,active.selectionDirection]:null;
  const term=$('search').value.trim().toLocaleLowerCase(),s=$('statusFilter').value,r=$('roleFilter').value;
  const list=perWeek(weekId),visible=list.filter(t=>
   (s==='all'||t.status===s)&&(r==='all'||t.role===r)&&
@@ -160,6 +185,19 @@ function renderTasks(){
  );
  $('tasks').innerHTML=visible.length?visible.map(card).join(''):'<div class="empty">'+
   (list.length?'ไม่พบข้อที่ตรงกับตัวกรอง':'ยังไม่มีข้อ / งาน · กด + เพิ่มข้อ / งาน')+'</div>';
+ for(const card of $('tasks').querySelectorAll('[data-task]')){
+  const id=card.dataset.task,note=card.querySelector('[data-note]'),caption=card.querySelector('[data-evidence-caption]');
+  if(renderedEditorId&&note&&noteDrafts.has(id)){
+   const draft=noteDrafts.get(id);
+   if(draft===note.defaultValue)noteDrafts.delete(id);else note.value=draft;
+  }
+  if(renderedEditorId&&caption&&captionDrafts.has(id))caption.value=captionDrafts.get(id);
+  if(id===activeId&&field&&renderedEditorId){
+   const next=card.querySelector('[data-'+field+']');
+   if(next&&!next.disabled){next.focus({preventScroll:true});if(selection)next.setSelectionRange(...selection);}
+  }
+ }
+ syncExpandButton();
 }
 function renderActive(){
  const w=currentWeek();
@@ -242,6 +280,7 @@ async function uploadEvidence(input){
    }
    await loadEvidence();
    render();
+   captionDrafts.delete(taskId);
    tell('บันทึกหลักฐาน '+fileList.length+' รูปลง Supabase แล้ว');
  }finally{busy=false;render();}
 }
@@ -349,7 +388,7 @@ $('addTenWeeks').addEventListener('click',()=>{
 });
 $('weeks').addEventListener('click',e=>{
  const b=e.target.closest('[data-week]');if(!b)return;
- weekId=b.dataset.week;$('search').value='';$('statusFilter').value='all';expanded=false;render();
+ weekId=b.dataset.week;$('search').value='';$('statusFilter').value='all';render();
 });
 $('weekForm').addEventListener('submit',e=>{
  e.preventDefault();
@@ -451,7 +490,20 @@ $('passwordForm').addEventListener('submit',async event=>{
 $('search').addEventListener('input',renderTasks);
 $('statusFilter').addEventListener('change',renderTasks);
 $('roleFilter').addEventListener('change',renderTasks);
-$('expand').addEventListener('click',()=>{expanded=!expanded;$('expand').textContent=expanded?'ย่อรายละเอียดทั้งหมด':'ขยายรายละเอียดทั้งหมด';renderTasks();});
+$('tasks').addEventListener('toggle',e=>{
+ const panel=e.target;
+ if(!panel.matches('details.details')||!$('tasks').contains(panel))return;
+ const id=panel.closest('[data-task]')?.dataset.task;
+ if(!id)return;
+ if(panel.open)openTaskIds.add(id);else openTaskIds.delete(id);
+ syncExpandButton();
+},true);
+$('expand').addEventListener('click',()=>{
+ rememberTaskUI();
+ const list=perWeek(weekId),allOpen=list.length>0&&list.every(t=>openTaskIds.has(t.id));
+ for(const t of list){if(allOpen)openTaskIds.delete(t.id);else openTaskIds.add(t.id);}
+ renderTasks(false);
+});
 document.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',()=>$(button.dataset.close).close()));
 let timer;
 async function start(){
