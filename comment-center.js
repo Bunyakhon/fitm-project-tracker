@@ -76,7 +76,7 @@ window.createFitmCommentCenter=function({db,esc,accepted,affected,account,canEdi
   const term=$('ccSearch').value.trim().toLocaleLowerCase(),filter=$('ccFilter').value;
   const selected=base.filter(c=>(filter==='all'||(filter==='unread'?unread(c):!unread(c)))&&[c.author_name,c.body,c.taskTitle,c.reference,c.projectName].join(' ').toLocaleLowerCase().includes(term));
   $('ccResult').textContent='พบ '+selected.length+' ความคิดเห็น · '+(channelState==='SUBSCRIBED'?'Realtime เชื่อมต่อแล้ว':'อัปเดตอัตโนมัติทุก 30 วินาที');
-  const html=selected.slice(0,page*30).map(c=>commentCard(c,true)).join('')||'<p class="cc-empty">'+(err||(!loaded?'กำลังโหลด…':'ไม่พบความคิดเห็น'))+'</p>';
+  const html=selected.slice(0,page*30).map(c=>commentCard(c,true)).join('')||'<p class="cc-empty">'+esc(err||(!loaded?'กำลังโหลด…':'ไม่พบความคิดเห็น'))+'</p>';
   if($('ccCenterList').innerHTML!==html)$('ccCenterList').innerHTML=html;
   $('ccMore').hidden=selected.length<=page*30;
   $('ccMarkAll').disabled=!loaded||!rows.some(unread)||writing;
