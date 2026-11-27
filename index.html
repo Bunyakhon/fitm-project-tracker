@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="project-insights-v2.css">
   <link rel="stylesheet" href="task-details-v3.css">
   <link rel="stylesheet" href="public-comments.css">
+  <link rel="stylesheet" href="comment-center.css?v=2">
 </head>
 <body>
 <a class="skip-link" href="#workspace">ข้ามไปยังรายการงาน</a>
@@ -46,6 +47,7 @@
       <button type="submit" class="btn primary">บันทึกรหัสผ่าน</button>
     </form>
     <button type="button" id="togglePassword" class="btn" hidden>ตั้ง/เปลี่ยนรหัสผ่าน</button>
+    <button type="button" id="openCommentCenter" class="btn" hidden>🔔 Comment Center / ความคิดเห็น <span id="ccNotification" aria-live="polite">…</span></button>
     <p id="feedback" class="feedback" role="status" aria-live="polite"></p>
   </section>
 
@@ -223,21 +225,19 @@
       <div class="actions"><button class="btn primary" type="submit">บันทึกข้อ / งาน</button><button class="btn" type="button" data-close="taskDialog">ยกเลิก</button></div>
     </form>
   </dialog>
-  <dialog id="commentDialog" class="modal comment-modal" aria-labelledby="commentDialogTitle">
-    <div class="comment-dialog-heading"><div><h2 id="commentDialogTitle">ความคิดเห็น / Comment</h2><p id="commentTaskTitle"></p></div><button type="button" id="closeComments" class="btn" aria-label="ปิดความคิดเห็น">ปิด</button></div>
-    <p class="comment-disclaimer">ส่งความคิดเห็นได้โดยไม่ต้องเข้าสู่ระบบ · ชื่อที่กรอกไม่ได้ผ่านการยืนยันตัวตน · ความคิดเห็นเป็นสาธารณะ โปรดไม่ใส่ข้อมูลส่วนบุคคล</p>
-    <div class="comment-list-heading"><h3>ความคิดเห็นล่าสุด (สูงสุด 50 รายการ)</h3><button type="button" class="btn" id="refreshComments">รีเฟรช</button></div>
-    <div id="commentList" class="comment-list" aria-live="polite"></div>
-    <form id="commentForm">
-      <label>ชื่อผู้แสดงความคิดเห็น (ไม่บังคับ)<input name="author_name" maxlength="80" placeholder="ผู้เยี่ยมชม"></label>
-      <label>ความคิดเห็น<textarea name="body" maxlength="2000" rows="4" required placeholder="ข้อเสนอแนะ คำถาม หรือความคิดเห็นเกี่ยวกับงานนี้"></textarea></label>
-      <p id="commentFeedback" class="feedback" role="status"></p>
-      <div class="actions"><button type="submit" id="sendComment" class="btn primary">ส่งความคิดเห็น</button></div>
-    </form>
+  <dialog id="commentCenterDialog" class="modal cc-center" aria-labelledby="ccTitle">
+    <div class="cc-center-header"><div><span class="section-kicker">COMMENT CENTER</span><h2 id="ccTitle">ศูนย์จัดการความคิดเห็น</h2><p>รวมความคิดเห็นจากทุกโปรเจกต์และสัปดาห์</p></div><button id="ccClose" class="btn" type="button">ปิด</button></div>
+    <div class="cc-stats"><div><small>ทั้งหมด</small><strong id="ccAll">0</strong></div><div><small>ยังไม่ได้อ่าน</small><strong id="ccUnread">0</strong></div><div><small>อ่านแล้ว</small><strong id="ccRead">0</strong></div></div>
+    <label>ค้นหาความคิดเห็น<input id="ccSearch" type="search" placeholder="ชื่อ หัวข้องาน หรือข้อความ…"></label>
+    <div class="cc-filters"><label>โปรเจกต์<select id="ccProject"><option value="all">ทุกโปรเจกต์</option></select></label><label>สัปดาห์<select id="ccWeek"><option value="all">ทุกสัปดาห์</option></select></label><label>สถานะการอ่าน<select id="ccFilter"><option value="all">ทั้งหมด</option><option value="unread">ยังไม่ได้อ่าน</option><option value="read">อ่านแล้ว</option></select></label></div>
+    <div class="cc-toolbar"><span id="ccResult"></span><button class="btn" id="ccRefresh" type="button">รีเฟรช</button><button class="btn primary" id="ccMarkAll" type="button">อ่านทั้งหมดแล้ว</button></div>
+    <p id="commentCenterFeedback" role="status"></p><div id="ccCenterList" class="cc-center-list"></div>
+    <button id="ccMore" class="btn" type="button" hidden>แสดงเพิ่มเติม</button><div id="ccCenterComposer"></div>
   </dialog>
   <footer class="footer">FITM Project Tracker · CoopConnect 68 ข้อจากขอบเขตต้นฉบับ + โปรเจกต์ใหม่ที่สร้างเอง · ข้อมูลจาก Supabase</footer>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0"></script>
-<script src="template.js?v=public-comments-v1"></script>
+<script src="comment-center.js?v=2"></script>
+<script src="template.js?v=comment-center-v2"></script>
 </body>
 </html>
