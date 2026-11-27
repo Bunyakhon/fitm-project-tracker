@@ -1,0 +1,25 @@
+/* Public task notes and guest discussion */
+.task .public-note-body{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.8;margin:10px 0 0;color:#334762}
+.task .task-note h4{font-size:15px;color:#263d5c;margin:0;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.public-note-tag{font-size:12px;font-weight:600;color:#64748b;background:#e9eef6;border-radius:6px;padding:3px 7px}
+.task .comment-button{color:#2458b4;background:#edf4ff;border-color:#d6e4fc}
+.task .comment-button:hover{background:#dceaff}
+.comment-modal{width:min(92vw,650px);max-height:90dvh;overflow:auto}
+.comment-dialog-heading,.comment-list-heading,.guest-comment-meta{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.comment-dialog-heading>div{min-width:0;flex:1}
+.comment-dialog-heading h2{margin:0 0 8px}
+#commentTaskTitle{color:#526682;overflow-wrap:anywhere;line-height:1.6;margin:0 0 10px}
+.comment-disclaimer{background:#f2f6fc;border:1px solid #dce7f4;border-radius:10px;color:#526682;font-size:13px;line-height:1.65;padding:12px}
+.comment-list-heading{align-items:center;margin:18px 0 10px}
+.comment-list-heading h3{font-size:15px;margin:0;color:#243b5e}
+.comment-list{display:grid;gap:9px;max-height:340px;overflow:auto;overscroll-behavior:contain}
+.guest-comment{padding:12px;border:1px solid #dce5f1;border-radius:12px;background:#f9fbff}
+.guest-comment-meta strong{font-size:14px;color:#243b5e;overflow-wrap:anywhere}
+.guest-comment-meta time{font-size:12px;color:#64748b}
+.guest-comment-body{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7;margin:8px 0;color:#334762;font-size:15px}
+.guest-comment .btn{font-size:12px;padding:6px 10px;min-height:32px}
+#commentForm{border-top:1px solid #dce5f1;padding-top:14px;margin-top:16px}
+#commentForm textarea{min-height:110px;resize:vertical}
+#commentForm .actions{justify-content:flex-end}
+#commentFeedback{min-height:1.2em;overflow-wrap:anywhere}
+@media(max-width:540px){.comment-list{max-height:240px}.comment-dialog-heading h2{font-size:20px}#sendComment{width:100%}}
