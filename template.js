@@ -7,7 +7,7 @@ const E='tracker_custom_evidence', C='tracker_custom_comments', BUCKET='fitm-evi
 const MAX_IMAGE_BYTES=5*1024*1024;
 const ALLOWED_IMAGE_TYPES={ 'image/jpeg':'jpg', 'image/png':'png', 'image/webp':'webp' };
 let evidence=[],signedEvidence=new Map(),evidenceError=false;
-let commentTaskId='',commentRequest=0,commentBusy=false;
+let comments;
 let passwordFlow=/(?:[?&#])type=(?:invite|recovery)(?:&|$)/.test(location.hash + location.search);
 const labels={not_started:'ยังไม่เริ่ม',in_progress:'กำลังดำเนินการ',completed:'เสร็จแล้ว'};
 const $=id=>document.getElementById(id);
@@ -154,8 +154,8 @@ function card(t){
  '<h4>โน้ตความคืบหน้า <span class="public-note-tag">อ่านอย่างเดียว</span></h4><p class="public-note-body">'+esc(t.note||'ยังไม่มีโน้ตความคืบหน้า')+'</p>')+'</div></details>'+
  '<div class="task-commands"><button type="button" class="btn" data-edit-task="'+esc(t.id)+'"'+attr+'>แก้ไขข้อ / ย้ายสัปดาห์</button>'+
  '<button type="button" class="btn danger" data-delete-task="'+esc(t.id)+'"'+preventDelete+'>ลบข้อ</button>'+
- '<button type="button" class="btn comment-button" data-open-comments="'+esc(t.id)+'">Comment / แสดงความคิดเห็น</button></div>'+
- '<div class="current-status">สถานะปัจจุบัน: <b>'+esc(labels[t.status]||labels.not_started)+'</b></div></article>';
+ '<button type="button" class="btn comment-button" data-open-comments="'+esc(t.id)+'">ความคิดเห็น <span data-comment-count="'+esc(t.id)+'">…</span></button></div>'+
+ '<div class="current-status">สถานะปัจจุบัน: <b>'+esc(labels[t.status]||labels.not_started)+'</b></div>'+comments.inline(t.id)+'</article>';
 }
 function rememberTaskUI(rememberOpen=true){
  const editorId=user&&editor?user.id:null;
@@ -198,6 +198,7 @@ function renderTasks(rememberOpen=true){
   }
  }
  syncExpandButton();
+ comments.paint();
 }
 function renderActive(){
  const w=currentWeek();
@@ -211,7 +212,7 @@ function renderActive(){
  $('weekDeliverable').textContent=w.deliverable||'';$('weekBar').style.width=rate+'%';
  renderFilters();renderTasks();
 }
-function render(){renderProjects();renderStats();renderWeeks();renderActive();permissions();}
+function render(){renderProjects();renderStats();renderWeeks();renderActive();permissions();comments.syncAccount();}
 async function load(){
  if(!db){ready=false;$('connection').textContent='โหลด Supabase SDK ไม่สำเร็จ';render();return;}
  const ticket=++request;
@@ -227,7 +228,7 @@ async function load(){
   if(ticket!==request)return;tasks=t||[];
   await loadEvidence();
   if(ticket!==request)return;
-  ready=true;$('connection').textContent='เชื่อมต่อ Supabase แล้ว · ข้อมูลโปรเจกต์และงานใช้ร่วมกัน';render();
+  ready=true;$('connection').textContent='เชื่อมต่อ Supabase แล้ว · ข้อมูลโปรเจกต์และงานใช้ร่วมกัน';render();comments.schedule();
  }catch(e){
   ready=false;$('connection').textContent='ยังโหลด Template ไม่ได้ · ตรวจว่าได้รันไฟล์ SQL สำหรับ Template แล้ว';
   tell(e.message,true);permissions();
@@ -438,7 +439,7 @@ $('tasks').addEventListener('change',e=>{
 });
 $('tasks').addEventListener('click',e=>{
  const comment=e.target.closest('[data-open-comments]');
- if(comment){void openComments(comment.dataset.openComments);return;}
+ if(comment){comments.openTask(comment.dataset.openComments);return;}
  const edit=e.target.closest('[data-edit-task]');
  if(edit)return taskDialog(edit.dataset.editTask);
  const del=e.target.closest('[data-delete-task]');
@@ -466,68 +467,18 @@ $('tasks').addEventListener('change',e=>{
  if(!input)return;
  void uploadEvidence(input).catch(error=>tell('อัปโหลดไม่สำเร็จ: '+error.message,true));
 });
-const commentMessage=(msg,error=false)=>{
- $('commentFeedback').textContent=msg;
- $('commentFeedback').classList.toggle('error',error);
-};
-async function loadComments(){
- const id=commentTaskId,ticket=++commentRequest;
- if(!id)return;
- $('commentList').setAttribute('aria-busy','true');
- try{
-  const rows=accepted(await db.from(C).select('id,author_name,body,created_at').eq('task_id',id).order('created_at',{ascending:false}).order('id',{ascending:false}).limit(50));
-  if(ticket!==commentRequest||id!==commentTaskId)return;
-  $('commentList').innerHTML=rows.length?rows.map(c=>
-   '<article class="guest-comment"><div class="guest-comment-meta"><strong>'+esc(c.author_name||'ผู้เยี่ยมชม')+'</strong>'+
-   '<time datetime="'+esc(c.created_at)+'">'+esc(new Date(c.created_at).toLocaleString('th-TH'))+'</time></div>'+
-   '<p class="guest-comment-body">'+esc(c.body)+'</p>'+
-   (user&&editor?'<button type="button" class="btn danger" data-remove-comment="'+esc(c.id)+'">ลบความคิดเห็น</button>':'')+'</article>'
-  ).join(''):'<p class="evidence-empty">ยังไม่มีความคิดเห็น</p>';
- }catch(error){
-  if(ticket===commentRequest){$('commentList').textContent='ไม่สามารถโหลดความคิดเห็นได้';commentMessage('โหลดความคิดเห็นไม่สำเร็จ: '+error.message,true);}
- }finally{if(ticket===commentRequest)$('commentList').removeAttribute('aria-busy');}
-}
-async function openComments(id){
- const task=tasks.find(t=>t.id===id);
- if(!task||!db||commentBusy)return;
- commentTaskId=id;
- $('commentTaskTitle').textContent=(task.reference?task.reference+' · ':'')+task.title;
- $('commentForm').reset();
- $('commentList').textContent='กำลังโหลดความคิดเห็น…';
- commentMessage('');
- if(!$('commentDialog').open)$('commentDialog').showModal();
- await loadComments();
-}
-$('refreshComments').addEventListener('click',()=>{commentMessage('');void loadComments();});
-$('commentForm').addEventListener('submit',async e=>{
- e.preventDefault();
- if(commentBusy||!commentTaskId||!db)return;
- const form=e.currentTarget,id=commentTaskId;
- const name=form.elements.namedItem('author_name').value.trim()||'ผู้เยี่ยมชม';
- const body=form.elements.namedItem('body').value.trim();
- if(name.length>80||!body||body.length>2000)return commentMessage('กรุณากรอกความคิดเห็น 1–2,000 ตัวอักษร และชื่อไม่เกิน 80 ตัวอักษร',true);
- commentBusy=true;$('sendComment').disabled=true;commentMessage('กำลังส่งความคิดเห็น…');
- try{
-  accepted(await db.from(C).insert({task_id:id,author_name:name,body}));
-  form.elements.namedItem('body').value='';
-  commentMessage('ส่งความคิดเห็นเรียบร้อยแล้ว');
-  await loadComments();
- }catch(error){commentMessage('ส่งความคิดเห็นไม่สำเร็จ: '+error.message,true);}
- finally{commentBusy=false;$('sendComment').disabled=false;}
+comments=window.createFitmCommentCenter({
+ db,esc,accepted,affected,
+ account:()=>user&&editor?user.id:null,
+ canEdit,
+ projects:()=>projects,
+ goToTask:async (row)=>{
+  projectId=row.projectId;weekId=row.weekId;
+  $('search').value='';$('statusFilter').value='all';$('roleFilter').value='all';
+  await load();
+  if(!tasks.some(t=>t.id===row.task_id)||weekId!==row.weekId)throw Error('ไม่พบงานที่เกี่ยวข้อง');
+ }
 });
-$('commentList').addEventListener('click',async e=>{
- const b=e.target.closest('[data-remove-comment]');
- if(!b||!canEdit()||commentBusy||!confirm('ลบความคิดเห็นนี้หรือไม่?'))return;
- commentBusy=true;b.disabled=true;
- try{
-  affected(await db.from(C).delete().eq('id',b.dataset.removeComment).eq('task_id',commentTaskId).select('id'));
-  commentMessage('ลบความคิดเห็นแล้ว');await loadComments();
- }catch(error){commentMessage('ลบความคิดเห็นไม่สำเร็จ: '+error.message,true);}
- finally{commentBusy=false;b.disabled=false;}
-});
-$('commentDialog').addEventListener('cancel',e=>{if(commentBusy)e.preventDefault();});
-$('closeComments').addEventListener('click',()=>{if(!commentBusy)$('commentDialog').close();});
-$('commentDialog').addEventListener('close',()=>{commentTaskId='';commentRequest++;if(!busy)void load();});
 $('resetPassword').addEventListener('click',async()=>{
  const email=$('loginEmail').value.trim();
  if(!email)return tell('กรุณากรอกอีเมลก่อนขอลิงก์ตั้งรหัสผ่าน',true);
@@ -572,7 +523,7 @@ async function start(){
    if(event==='PASSWORD_RECOVERY')passwordFlow=true;
    setTimeout(()=>void account(),0);
  });
- await load();await account();
+ await load();await account();comments.start();
  db.channel('fitm-custom-template')
  .on('postgres_changes',{event:'*',schema:'public',table:P},changedRealtime)
  .on('postgres_changes',{event:'*',schema:'public',table:W},changedRealtime)
